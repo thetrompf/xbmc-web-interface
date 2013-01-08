@@ -1,0 +1,28 @@
+{
+	"folders":
+	[
+		{
+			"name": "server",
+			"path": "./src/server"
+		},
+		{
+			"name": "client",
+			"path": "./src/client",
+			"folder_exclude_patterns": [
+				"img"
+			]
+		}
+	],
+	"build_systems": [
+		{
+			"name": "Build application",
+			"selector": "source.js, source.coffee, source.css, source.css.less, text.html",
+			"shell": true,
+			"cmd": ["cake build:app"],
+			"working_dir": "$project_path",
+			"env": {
+				"ENV": "development"
+			}
+		}
+	]
+}

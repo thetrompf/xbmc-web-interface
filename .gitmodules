@@ -1,0 +1,6 @@
+[submodule "src/client/vendor/jquery"]
+	path = src/client/vendor/jquery
+	url = git://github.com/jquery/jquery
+[submodule "src/client/vendor/require"]
+	path = src/client/vendor/require
+	url = git://github.com/jrburke/requirejs
