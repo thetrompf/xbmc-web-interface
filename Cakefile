@@ -6,7 +6,8 @@ wrench = require 'wrench'
 
 input =
 	server: path.join "src", "server"
-	coffee: path.join "src", "client", "app"
+	app:    path.join "src", "client", "app"
+	base:   path.join "src", "client", "base"
 	style:  path.join "src", "client", "less"
 	vendor: path.join "src", "client", "vendor"
 	img:    path.join "src", "client", "img"
@@ -14,7 +15,8 @@ input =
 
 output =
 	server: path.join "build", "server"
-	js:     path.join "build", "client", "js", "app"
+	app:    path.join "build", "client", "js", "app"
+	base:   path.join "build", "client", "js", "base"
 	style:  path.join "build", "client", "css"
 	vendor: path.join "build", "client", "js", "vendor"
 	img:    path.join "build", "client", "img"
@@ -46,27 +48,19 @@ createDirs = (cont) ->
 		mkdirp.sync outoutPath
 	cont?()
 
-buildjQuery = (options, cont) ->
-	console.log "Building jQuery..."
-	cmd = path.join "node_modules", "grunt-cli", "bin", "grunt"
-	cwd = path.join input.vendor, "jquery"
-	exec cmd, {cwd: cwd}, (error, stdout, stderr) ->
-		console.log stderr if stderr
-		console.log error if error?
-		copyjQuery options, () ->
-			cont?()
-
 buildDeps = (options, cont) ->
 	console.log "Building dependcies..."
-	buildjQuery options, () ->
+	copyjQuery options, () ->
 		copyRequireJs options, () ->
 			copyKnockoutJs options, () ->
 				copyBootstrapJs options, () ->
-					cont?()
+					copyUnderscoreJs options, () ->
+						copySammyJs options, () ->
+							cont?()
 
 copyjQuery = (options, cont) ->
 	console.log "Copying jQuery..."
-	jqueryInputPath = path.join input.vendor, "jquery", "dist"
+	jqueryInputPath = path.join input.vendor, "jquery"
 	jqueryOutputPath = path.join output.vendor, "jquery"
 	mkdirp jqueryOutputPath
 	copyFileSync (path.join jqueryInputPath, "jquery.js"), (path.join jqueryOutputPath, "jquery.js")
@@ -104,11 +98,21 @@ copyUnderscoreJs = (options, cont) ->
 	underscoreOutputPath = path.join output.vendor, "underscore"
 	mkdirp underscoreOutputPath
 	copyFileSync (path.join underscoreInputPath, "underscore.js"), (path.join underscoreOutputPath, "underscore.js")
+	cont?()
+
+copySammyJs = (options, cont) ->
+	console.log "Copying sammy.js"
+	sammyInputPath = path.join input.vendor, "sammy"
+	sammyOutputPath = path.join output.vendor, "sammy"
+	mkdirp sammyOutputPath
+	copyFileSync (path.join sammyInputPath, "sammy.js"), (path.join sammyOutputPath, "sammy.js")
+	cont?()
 
 copyHtml = (options, cont) ->
 	console.log "Copying templates..."
 	inputIndex = path.join input.client, "app"
 	outputIndex = path.join output.client
+	mkdirp outputIndex
 	copyFileSync (path.join inputIndex, "index.html"), (path.join outputIndex, "index.html")
 	cont?()
 
@@ -135,13 +139,16 @@ buildServer = (options, cont) ->
 
 buildClient = (options, cont) ->
 	console.log "Compiling client..."
-	exec "coffee --compile --bare --output #{output.js} #{input.coffee}", (error, stdout, stderr) ->
+	exec "coffee --compile --bare --output #{output.app} #{input.app}", (error, stdout, stderr) ->
 		console.log stderr if stderr
 		console.log error if error?
-		compileLess options, () ->
-			copyingImages options, () ->
-				copyHtml options, () ->
-					cont?()
+		exec "coffee --compile --bare --output #{output.base} #{input.base}", (error, stdout, stderr) ->
+			console.log stderr if stderr
+			console.log error if error?
+			compileLess options, () ->
+				copyingImages options, () ->
+					copyHtml options, () ->
+						cont?()
 
 buildApp = (options, cont) ->
 	buildServer options, () ->

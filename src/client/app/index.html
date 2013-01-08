@@ -8,32 +8,40 @@
 	<script type="text/javascript" src="/js/app/bootstrap.js"></script>
 </head>
 <body>
-	<div class="navbar navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<a href="#" class="brand">xbmc</a>
-				<ul class="nav">
-					<li>
-						<a href="#">Home</a>
-					</li>
-					<li>
-						<a href="#">Movies</a>
-					</li>
-					<li>
-						<a href="#">TV Shows</a>
-					</li>
-					<li>
-						<a href="#">Music</a>
-					</li>
-					<li>
-						<a href="#">Remote</a>
-					</li>
-					<li>
-						<a href="#">Settings</a>
-					</li>
-				</ul>
-			</div>
+<div class="navbar navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container">
+			<a href="/" class="brand">xbmc</a>
+			<ul class="nav">
+				<li>
+					<a href="/home">Home</a>
+				</li>
+				<li>
+					<a href="/movies">Movies</a>
+				</li>
+				<li>
+					<a href="/tvshows">TV Shows</a>
+				</li>
+				<li>
+					<a href="/music">Music</a>
+				</li>
+				<li>
+					<a href="/remote">Remote</a>
+				</li>
+				<li>
+					<a href="/settings">Settings</a>
+				</li>
+			</ul>
 		</div>
 	</div>
+</div>
+
+<div id="mainContainer">
+	<div class="container">
+		<div class="row-fluid">
+			<h1 data-bind="text: title"></h1>
+		</div>
+	</div>
+</div>
 </body>
 </html>
