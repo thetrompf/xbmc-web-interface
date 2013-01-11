@@ -18,7 +18,7 @@
 			"name": "Build application",
 			"selector": "source.js, source.coffee, source.css, source.css.less, text.html",
 			"shell": true,
-			"cmd": ["cake build:app"],
+			"cmd": ["cake build:client"],
 			"working_dir": "$project_path",
 			"env": {
 				"ENV": "development"

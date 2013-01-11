@@ -3,5 +3,7 @@ define [
 ], (ViewModel) ->
 	class SettingsViewModel extends ViewModel
 
+		bindingContext: "#main-container"
+
 		properties: () ->
 			title: @observable "Settings"

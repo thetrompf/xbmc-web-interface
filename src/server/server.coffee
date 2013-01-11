@@ -16,15 +16,13 @@ app.configure () ->
 app.configure 'development', () ->
   app.use express.errorHandler()
 
-urlHandler = (req, res) -> res.sendfile path.join __dirname, "..", "client", "index.html"
+urlHandler = (req, res) ->
+	idx = req.path.lastIndexOf '.'
+	if idx < 0
+		return res.sendfile path.join __dirname, "..", "client", "js", "app", "index.html"
+	return res.send 404
 
-app.get '/', urlHandler
-app.get '/home', urlHandler
-app.get '/movies', urlHandler
-app.get '/music', urlHandler
-app.get '/remote', urlHandler
-app.get '/settings', urlHandler
-app.get '/tvshows', urlHandler
+app.use urlHandler
 
 (http.createServer app).listen (app.get 'port'), () ->
   console.log "Express server listening on port #{app.get 'port'}"

@@ -3,6 +3,7 @@ path = require 'path'
 exec = (require 'child_process').exec
 mkdirp = require 'mkdirp'
 wrench = require 'wrench'
+_ = require 'underscore'
 
 input =
 	server: path.join "src", "server"
@@ -26,30 +27,71 @@ String::repeat = (n) ->
 	return "" if n < 1
 	return (new Array n+1).join @
 
+copyFile = (srcFile, destFile, cont) ->
+	src = fs.createReadStream srcFile
+	dest = fs.createWriteStream destFile
+
+	src.pipe dest
+	dest.on 'close', () ->
+		cont?()
+
 copyFileSync = (srcFile, destFile) ->
-  BUF_LENGTH = 64*1024
-  buff = new Buffer BUF_LENGTH
-  fdr = fs.openSync srcFile, 'r'
-  fdw = fs.openSync destFile, 'w'
-  bytesRead = 1
-  pos = 0
-  while bytesRead > 0
-    bytesRead = fs.readSync fdr, buff, 0, BUF_LENGTH, pos
-    fs.writeSync fdw,buff, 0, bytesRead
-    pos += bytesRead
-  fs.closeSync fdr
-  fs.closeSync fdw
+	console.log srcFile, destFile
+	BUF_LENGTH = 128*1024
+	buff = new Buffer BUF_LENGTH
+	fdw = fs.openSync destFile, 'w'
+	console.log "opened write"
+	fdr = fs.openSync srcFile, 'r'
+	bytesRead = 1
+	pos = 0
+	while bytesRead > 0
+		bytesRead = fs.readSync fdr, buff, 0, BUF_LENGTH, pos
+		fs.writeSync fdw,buff, 0, bytesRead
+		pos += bytesRead
+	fs.closeSync fdw
+	fs.closeSync fdr
+
+# ext is optional
+fs.find = (dir, ext, done) ->
+	# checking if ext is present
+	done = ext if _.isFunction ext
+	results = []
+	fs.readdir dir, (err, list) ->
+		return done err if err
+		i = 0
+		(next = () ->
+			file = list[i++]
+			return done null, results unless file
+			file = path.join dir, file
+			fs.stat file, (err, stat) ->
+				if stat and stat.isDirectory()
+					if _.isString ext
+						fs.find file, ext, (err, res) ->
+							results = results.concat res
+							next()
+					else
+						fs.find file, (err, res) ->
+							results = results.concat res
+							next()
+				else
+					if _.isString ext # check if extension is defined
+						fileExt = path.extname file
+						results.push file if fileExt is ".#{ext}"
+					else
+						results.push file
+					next()
+		)()
 
 option "-m", "--minify", "Build minified js files"
 option "-r", "--rjs", "Compile with r.js optimization"
 
 createDirs = (cont) ->
-	for _, outoutPath of output
+	for unused, outoutPath of output
 		mkdirp.sync outoutPath
 	cont?()
 
-buildDeps = (options, cont) ->
-	console.log "Building dependcies..."
+copyDeps = (options, cont) ->
+	console.log "Copying dependcies..."
 	copyjQuery options, () ->
 		copyRequireJs options, () ->
 			copyKnockoutJs options, () ->
@@ -62,59 +104,86 @@ copyjQuery = (options, cont) ->
 	console.log "Copying jQuery..."
 	jqueryInputPath = path.join input.vendor, "jquery"
 	jqueryOutputPath = path.join output.vendor, "jquery"
-	mkdirp jqueryOutputPath
-	copyFileSync (path.join jqueryInputPath, "jquery.js"), (path.join jqueryOutputPath, "jquery.js")
-	cont?()
+	mkdirp jqueryOutputPath, () ->
+		copyFile (path.join jqueryInputPath, "jquery.js"), (path.join jqueryOutputPath, "jquery.js"), () ->
+			cont?()
 
 copyKnockoutJs = (options, cont) ->
 	console.log "Copying knockout.js..."
 	knockoutInputPath = path.join input.vendor, "knockout"
 	knockoutOutputPath = path.join output.vendor, "knockout"
-	mkdirp knockoutOutputPath
-	copyFileSync (path.join knockoutInputPath, "knockout.js"), (path.join knockoutOutputPath, "knockout.js")
-	cont?()
+	mkdirp knockoutOutputPath, () ->
+		copyFile (path.join knockoutInputPath, "knockout.js"), (path.join knockoutOutputPath, "knockout.js"), () ->
+			cont?()
 
 copyRequireJs = (options, cont) ->
 	console.log "Copying require.js..."
 	requireInputPath = path.join input.vendor, "require"
 	requireOutputPath = path.join output.vendor, "require"
 	mkdirp requireOutputPath
-	copyFileSync (path.join requireInputPath, "require.js"), (path.join requireOutputPath, "require.js")
-	cont?()
+	copyFile (path.join requireInputPath, "require.js"), (path.join requireOutputPath, "require.js"), () ->
+		copyFile (path.join requireInputPath, "require.text.js"), (path.join requireOutputPath, "require.text.js"), () ->
+			cont?()
 
 copyBootstrapJs = (options, cont) ->
 	console.log "Copying bootstrap.js..."
 	bootstrapInputPath = path.join input.vendor, "bootstrap"
 	bootstrapOutputPath = path.join output.vendor, "bootstrap"
-	mkdirp bootstrapOutputPath
-	files = fs.readdirSync bootstrapInputPath
-	for file in files
-		copyFileSync (path.join bootstrapInputPath, file), (path.join bootstrapOutputPath, file)
-	cont?()
+	mkdirp bootstrapOutputPath, () ->
+		fs.readdir bootstrapInputPath, (err, files) ->
+			i = 0
+			(next = (cont) ->
+				console.log
+				file = files[i++]
+				return cont?() unless file?
+				copyFile (path.join bootstrapInputPath, file), (path.join bootstrapOutputPath, file), () ->
+					next(cont)
+			)(cont)
 
 copyUnderscoreJs = (options, cont) ->
 	console.log "Copying underscore.js..."
 	underscoreInputPath = path.join input.vendor, "underscore"
 	underscoreOutputPath = path.join output.vendor, "underscore"
-	mkdirp underscoreOutputPath
-	copyFileSync (path.join underscoreInputPath, "underscore.js"), (path.join underscoreOutputPath, "underscore.js")
-	cont?()
+	mkdirp underscoreOutputPath, () ->
+		copyFile (path.join underscoreInputPath, "underscore.js"), (path.join underscoreOutputPath, "underscore.js"), () ->
+			cont?()
 
 copySammyJs = (options, cont) ->
 	console.log "Copying sammy.js"
 	sammyInputPath = path.join input.vendor, "sammy"
 	sammyOutputPath = path.join output.vendor, "sammy"
-	mkdirp sammyOutputPath
-	copyFileSync (path.join sammyInputPath, "sammy.js"), (path.join sammyOutputPath, "sammy.js")
-	cont?()
+	mkdirp sammyOutputPath, () ->
+		copyFile (path.join sammyInputPath, "sammy.js"), (path.join sammyOutputPath, "sammy.js"), () ->
+			cont?()
 
 copyHtml = (options, cont) ->
 	console.log "Copying templates..."
-	inputIndex = path.join input.client, "app"
-	outputIndex = path.join output.client
-	mkdirp outputIndex
-	copyFileSync (path.join inputIndex, "index.html"), (path.join outputIndex, "index.html")
-	cont?()
+	inputIndex = path.join input.app
+	outputIndex = path.join output.app
+
+	mkdirp outputIndex, () ->
+		copyFile (path.join inputIndex, "index.html"), (path.join outputIndex, "index.html"), () ->
+		
+			fs.find inputIndex, "html", (err, files) ->
+				return cont?() if err?
+				i = 0
+				(next = (cont) ->
+					filePath = files[i++]
+					return cont?() unless filePath?
+
+					cp = () ->
+						file = path.basename filePath
+						copyFile filePath, (path.join outputIndex, dir, file), () ->
+							next(cont)
+
+					dir = (path.dirname filePath).substring (inputIndex.length + 1)
+					if dir isnt ""			
+						mkdirp (path.join outputIndex, dir), () ->
+							cp()
+					else
+						cp()
+				
+				)(cont)
 
 compileLess = (options, cont) ->
 	console.log "Compiling less..."
@@ -156,7 +225,7 @@ buildApp = (options, cont) ->
 			cont?()
 
 buildAll = (options, cont) ->
-	buildDeps options, () ->
+	copyDeps options, () ->
 		buildApp options, () ->
 			cont?()
 
@@ -176,7 +245,7 @@ task 'build:all', (options) ->
 
 task "build:deps", (options) ->
 	createDirs () ->
-		buildDeps options, () -> return
+		copyDeps options, () -> return
 
 task "build:jquery", (options) ->
 	createDirs () ->

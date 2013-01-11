@@ -6,6 +6,7 @@ requirejs.config
 		underscore: "vendor/underscore/underscore"
 		bootstrap: "vendor/bootstrap/bootstrap-all"
 		sammy: "vendor/sammy/sammy"
+		text: "vendor/require/require.text"
 	shim: 
 		underscore:
 			exports: "_"
@@ -17,5 +18,5 @@ requirejs.config
 			deps: ["jquery"]
 			exports: "Sammy"
 
-require ["app/app", "jquery", "knockout", "sammy", "underscore"], (Application, $, ko, Sammy, _) ->
+require ["app/app", "jquery", "knockout", "sammy", "underscore", "text"], (Application, $, ko, Sammy, _) ->
 	new Application()

@@ -1157,11 +1157,7 @@ $.extend(Sammy.DefaultLocationProxy.prototype , {
           var last_wrapped_route = wrapped_route;
           wrapped_route = function() { return around.apply(context, [last_wrapped_route]); };
         });
-        try {
-          final_returned = wrapped_route();
-        } catch(e) {
-          this.error(['500 Error', verb, path].join(' '), e);
-        }
+        final_returned = wrapped_route();
         return final_returned;
       } else {
         return this.notFound(verb, path);

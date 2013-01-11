@@ -1,22 +1,42 @@
 define [
 	"base/viewmodel"
-], (ViewModel) ->
+	"text!app/home/templates/home.html"
+], (ViewModel, template) ->
 	class HomeViewModel extends ViewModel
+
+		bindingContext: "#main-container"
+		template: template
+		template = null
+
+		self = null
 
 		properties: () ->
 			title: @observable "Home"
-			string: @observable "string"
-			array: @observable [ "elm1", "elm2" ]
-			minLength: 6
+			name: @observable ""
+			names: @observable [
+				name: "Brian K. Christensen"
+			,
+				name: "Kaare Hoff Skovgaard"
+			,
+				name: "Karina Haven Pedersen"
+			]
+			subpageAlert: @observable no
 
 		computedProperties: () ->
-			shortString: @computed () ->
-				@string().length < @minLength
+			shortName: @computed () -> @name().length < 20
 
-		initialize: (options) ->
-			super
-		
-		render: () ->
+		subscriptions: () ->
+			return [
+				@url.subscribe (newValue) ->
+					alert "Subpage has been triggered, by url subscription" if newValue is "/home/subpage"
+			] 
 
-		dispose: () ->
-			super
+		addHandler: () ->
+			@names.push name: @name()
+			@name ""
+
+		removeHandler: () -> self.names.remove @
+
+		initialize: (options) -> self = @
+		removeAlert: () -> @subpageAlert no
+		subpage: () -> @subpageAlert yes

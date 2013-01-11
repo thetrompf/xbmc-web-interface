@@ -8,7 +8,7 @@
 	<script type="text/javascript" src="/js/app/bootstrap.js"></script>
 </head>
 <body>
-<div class="navbar navbar-fixed-top">
+<div class="navbar navbar-fixed-top" id="topmenu">
 	<div class="navbar-inner">
 		<div class="container">
 			<a href="/" class="brand">xbmc</a>
@@ -36,11 +36,9 @@
 	</div>
 </div>
 
-<div id="mainContainer">
-	<div class="container">
-		<div class="row-fluid">
-			<h1 data-bind="text: title"></h1>
-		</div>
+<div class="container" id="main-container">
+	<div class="row-fluid">
+		<h1 data-bind="text: title"></h1>
 	</div>
 </div>
 </body>

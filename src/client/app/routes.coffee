@@ -5,6 +5,9 @@ define [], () ->
 			url: [ "/", "home" ]
 			path: "home"
 		,
+			url: "/home/subpage",
+			path: "home#viewmodel#subpage"
+		,
 			url: "movies"
 			path: "movies"
 		,
