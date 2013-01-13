@@ -1,80 +1,70 @@
 define [
-	"jquery"
 	"underscore"
-	"knockout"
-	"sammy"
-	"app/routes"
+	"base/router"
 	"base/viewmodel"
-], ($, _, ko, Sammy, routes, ViewModelBase) ->
+], (_, Router, ViewModelBase) ->
 	class TopmenuViewModel extends ViewModelBase
+
+		# autoRender is false, because the view is already in the DOM
+		# which is why $el is a string, that describes a selector matching the root element of the view
+		autoRender: false
+		$el: "#topmenu"
+		bindingContext: "#topmenu"
+
+		properties: () ->
+			menu: @observable [
+				link: "/home"
+				label: "Home"
+				exact: ["/"]
+			,
+				link: "/movies"
+				label: "Movies"
+			,
+				link: "/tvshows"
+				label: "TV Shows"
+			,
+				link: "/music"
+				label: "Music"
+			,
+				link: "/remote"
+				label: "Remote"
+			,
+				link: "/settings"
+				label: "Settings"
+			]
+
+		startsWith: (str, starts) ->
+			return true if starts is ''
+			return false unless str? or starts? 
+			str = String str
+			starts = String starts
+			return str.length >= starts.length and (str.slice 0, starts.length) is starts
+
+		afterInitialize: (options) ->
+			@initMenu @menu()
+			@ko.applyBindings @, @el
+
+		initMenu: (menu) ->
+			that = @
+			for entry in menu
+				entry.active = @computed () ->
+					return false unless (url = that.url())?
+					url = "/#{url}" unless url[0] is "/"
+					return true if that.startsWith url, @link
+					if _.isArray @match
+						for m in @match
+							return true if that.startsWith url, m
+					if _.isArray @exact
+						for e in @exact
+							return true if url is e
+					return false
+				, entry
 
 	class Application
 
-		# Holds the Sammy.js router.
-		router: null
-		# The current active main view model.
-		activeViewModel: null
-		# The current active path.
-		activePath: {}
-
-		# observable, that holds the url
-		url: null
+		_(@.prototype).extend Router.prototype
+		topmenu: null
 
 		constructor: (args) ->
-			@url = ko.observable()
+			@topmenu = new TopmenuViewModel url: @url
 			@initRouter()
-
-		initRouter: () ->
-			that = @
-			@router = Sammy () ->
-				initRoute = (url, path) =>
-					path = that.parsePath path
-
-					@get url, () ->
-						if that.activePath.module is path.module and that.activePath.viewmodel is path.viewmodel
-							that.url url
-							that.activePath = path
-							that.activeViewModel[path.method]() if path.method? and _.isFunction that.activeViewModel[path.method]
-							return @
-
-						require ["app/#{path.module}/#{path.viewmodel}"], (VM) ->
-							
-							that.activeViewModel?.dispose?()
-
-							vm = new VM url: that.url
-							that.activeViewModel = vm
-							that.activePath = path
-							that.url url
-
-							bindingContext = null
-							if _.isFunction vm.bindingContext
-								bindingContext = vm.bindingContext()
-							else if _.isString vm.bindingContext
-								bindingContext = bc[0] if (bc = $(vm.bindingContext)).length > 0
-							else if vm.bindingContext instanceof $
-								bindingContext = vm.bindingContext[0]
-
-							throw new Error "Body has been selected as binding context, due to nu other valid context has been given" unless bindingContext?
-
-							vm[path.method]() if path.method? and _.isFunction vm[path.method]
-							ko.applyBindings vm, bindingContext
-							vm.bindingsApplied()
-
-				for r in routes
-					if _.isString r.url
-						initRoute r.url, r.path
-					else if _.isArray r.url
-						for u in r.url
-							initRoute u, r.path
-				return @
-			.run()
-
-		parsePath: (path) ->
-			p = path.split '#'
-			p[1] = "viewmodel" unless p[1]?
-			throw new Error "Invalid router path #{path}" unless p[0]? and p[1]?
-			return {
-				module: p[0]
-				viewmodel: p[1]
-				method: p[2]
-			}

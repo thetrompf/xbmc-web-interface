@@ -1,9 +1,12 @@
 define [
 	"base/viewmodel"
-], (ViewModel) ->
+	"text!app/music/templates/music.html"
+], (ViewModel, template) ->
 	class MusicViewModel extends ViewModel
 
 		bindingContext: "#main-container"
+		template: template
+		template = null
 
 		properties: () ->
 			title: @observable "Music"

@@ -2,7 +2,8 @@ define [
 	"jquery"
 	"underscore"
 	"knockout"
-], ($, _, ko) ->
+	"base/router"
+], ($, _, ko, Router) ->
 	class ViewModelBase
 		
 		###
@@ -23,15 +24,13 @@ define [
 		# these should be disposed when this is view model is disposed.
 		_viewModels = [] # viewmodels
 
-		# see bindingContext property
-		_resolveContainer = (container) ->
-			return _resolveContainer container() if @_.isFunction container
-			return @$ container if @_.isString container
-			return container if container instanceof @$
-			return $ container if container.nodeType?
-			throw new Error "Invalid container format"
+		# holds the subscriptions
+		_subscriptions = null
 
-		# for bind the correct contexts.
+		# see bindingContext property
+		_resolveContainer = Router::resolveBindingContext
+
+		# for bind the correct contexts, to the callbacks.
 		_self = null
 
 		###
@@ -48,6 +47,9 @@ define [
 
 		# observable, you can subscribe to when the template is rendered.
 		rendered: null
+
+		# url observable
+		url: null
 
 		# observable, whether the viewModel is disposed
 		disposed: null
@@ -94,11 +96,22 @@ define [
 			return @ko.observableArray val if @_.isArray val
 			@ko.observable val
 
-		computed: (fn, opts = {}) -> @ko.computed fn, @, opts
+		computed: (fn, context = @, opts = {}) ->
 
+			@ko.computed fn, context, opts
+
+		subscribe: (observable, callback, context, event) ->
+			context = context || @
+			observable.subscribe callback, context, event
+
+		# return hash of observables
 		properties: () -> {}
+		# return hash of computed observables
 		computedProperties: () -> {}
-		subscriptions: () -> []
+		# return hash of subscriptions
+		# NB! remember to use @subscribe, instead of ko.subscribe
+		# in order to setting the correct context, without having to pass it yourself.
+		subscriptions: () -> {}
 
 		# called after construction.
 		# The @$el is not available yet
@@ -142,7 +155,8 @@ define [
 			# setting up properties
 			@_.extend @, @properties arguments...
 			@_.extend @, @computedProperties arguments...
-			@_.extend @, @subscriptions arguments...
+			_subscriptions = @subscriptions arguments...
+			@_.extend @, _subscriptions
 			
 			###
 			# Initializing 
@@ -155,11 +169,13 @@ define [
 				if @wrapTemplate
 					@$el = @$ "<#{@tagName} />"
 					@el = @$el.get 0
-				else
+				else if @template?
 					# This only works if the template only has one root element.
-					if @template?
-						@$el = @$ (@compile @template) @
-						@el = @$el.get 0
+					@$el = @$ (@compile @template) @
+					@el = @$el.get 0
+				else if _.isString @$el
+					@$el = @$ @$el
+					@el = @$el.get 0
 				@afterInitialize options
 
 			# setting up the wrapped render function
@@ -195,12 +211,27 @@ define [
 			_isAddedToDOM = yes
 			@addedToDOM()
 
+		# attach view model as a nested view model
+		attachViewModel: (viewModel) ->
+			_viewModels.push viewmodel
+
+		# detach view model from the nested viewmodel array,
+		# and return it.
+		#
+		# NB! the view model will not be disposed.
+		# so you will have to do that manually.
+		detachViewModel: (viewModel) ->
+			if (idx = _.indexOf _viewModels, viewmodel) > -1
+				vm = _viewModels[idx]
+				_viewModels.splice idx, 1
+				return vm
+
 		# dispose viewmodel
 		dispose: (previousViewModel) ->
 			unless previousViewModel is @
 				for vm in _viewModels
 					vm.dispose?(previousViewModel)
-				for subscription in @subscriptions()
-					subscription.dispose()
-				@disposed true
+				for key of _subscriptions
+					_subscriptions[key].dispose()
 				@$el?.remove()
+				@disposed true
