@@ -1,8 +1,9 @@
 define [
 	"underscore"
 	"base/router"
+	"app/routes"
 	"base/viewmodel"
-], (_, Router, ViewModelBase) ->
+], (_, Router, routes, ViewModelBase) ->
 	class TopmenuViewModel extends ViewModelBase
 
 		# autoRender is false, because the view is already in the DOM
@@ -67,4 +68,4 @@ define [
 
 		constructor: (args) ->
 			@topmenu = new TopmenuViewModel url: @url
-			@initRouter()
+			@initRouter routes

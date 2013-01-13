@@ -3,8 +3,7 @@ define [
 	"underscore"
 	"knockout"
 	"sammy"
-	"app/routes"
-], ($, _, ko, Sammy, routes) ->
+], ($, _, ko, Sammy) ->
 	class Router
 
 		# Holds the Sammy.js router.
@@ -17,7 +16,7 @@ define [
 		# observable, that holds the url
 		url: ko.observable()
 
-		initRouter: () ->
+		initRouter: (routes) ->
 			that = @
 			@router = Sammy () ->
 				initRoute = (url, path) =>
