@@ -10,27 +10,24 @@ define [
 		#####################
 		
 		# holds referenced to the original methods from the sub class
-		_render = null
-		_initialize = null
+		_render: null
+		_initialize: null
 
 		# is true when the compiled template is added to dom.
-		_isAddedToDOM = null
+		_isAddedToDOM: null
 
 		# is bindings applied
-		_isBindingsApplied = null
+		_isBindingsApplied: null
 
 		# supported methods to add template to dom (jQuery methods)
-		_DOMAttachMethods = ['append', 'prepend']
+		_DOMAttachMethods: ['append', 'prepend']
 		
 		# holds the viewModels attach from here.
 		# these should be disposed when this is view model is disposed.
-		_viewModels = [] # viewmodels
+		_viewModels: null # viewmodels
 
 		# holds the subscriptions
-		_subscriptions = null
-
-		# for bind the correct contexts, to the callbacks.
-		_self = null
+		_subscriptions: null
 
 		#############
 		# Utilities #
@@ -90,6 +87,7 @@ define [
 		# if yes, then you can deside which element you want to wrap the template in
 		wrapTemplate: no
 		tagName: 'div'   # string tag selector
+		className: null  # space sperated string
 
 		########################
 		# Reference variableds #
@@ -177,47 +175,52 @@ define [
 			@url = @options.url
 			delete @options['url']
 
+			@_viewModels = []
+
 			# initializing observable @disposed property.
 			@disposed = @observable no
 
 			# initializing observable @rendered property.
 			@rendered = @observable no
 
-			_isAddedToDOM = @observable false
-			_isBindingsApplied = @observable false
+			@_isAddedToDOM = @observable false
+			@_isBindingsApplied = @observable false
 
 			# setting up properties
 			@_.extend @, @properties arguments...
 			@_.extend @, @computedProperties arguments...
-			_subscriptions = @subscriptions arguments...
-			@_.extend @, _subscriptions
+			@_.extend @, @subscriptions arguments...
 			
 			# setting up observable of automatic callback calling when view is inserted into DOM
 			@computed () ->
-				if _isAddedToDOM() is yes
+				if _self._isAddedToDOM() is yes
 					_self.addedToDOM()
-					_self.applyBindings() unless _isBindingsApplied() is yes
-					for vm in _viewModels
+					_self.applyBindings() unless _self._isBindingsApplied() is yes
+					for vm in _self._viewModels
 						vm.attachToDOM() if vm.autoAttachToDOM
 
 			@computed () ->
-				if _isBindingsApplied() is yes
+				if _self._isBindingsApplied() is yes
 					_self.bindingsApplied()
 
 			################
 			# Initializing #
 			################
 
+			# debugger
+
 			# setting up the wrapped intialize function.
-			_initialize = @initialize
+			@_initialize = @initialize
 			@initialize = (options) ->
-				_initialize.call _self, options
+				_self._initialize.call _self, options
 				if _self.wrapTemplate
 					_self.$el = _self.$ "<#{@tagName} />"
+					_self.$el.addClass _self.className if _self.className?
 					_self.el = _self.$el.get 0
 				else if _self.template?
 					# This only works if the template only has one root element.
 					_self.$el = _self.$ (_self.compile _self.template) _self
+					throw new Error "Only one root element is allowed when rendering templates without wrapping" if _self.$el.length > 1
 					_self.el = _self.$el.get 0
 				else if _.isString _self.$el
 					_self.$el = _self.$ _self.$el
@@ -225,11 +228,11 @@ define [
 				_self.afterInitialize options
 
 			# setting up the wrapped render function
-			_render = @render
+			@_render = @render
 			@render = () ->
 				throw new Error "You have to define a template to use render" unless _self.template?
 				_self.$el.append (_self.compile _self.template) _self if _self.wrapTemplate
-				_render.call _self
+				_self._render.call _self
 				_self.rendered yes
 
 				# applying context to element if the binding context is not in the DOM.
@@ -254,10 +257,10 @@ define [
 		# @return jQuery|null
 		###
 		resolveContext: (context) ->
-			return _self.resolveContext context.call _self if _.isFunction context
-			return $ context if _.isString context
-			return context if context instanceof $
-			return $ context if context?.nodeType?
+			return @resolveContext context.call @ if _.isFunction context
+			return @$ context if _.isString context
+			return context if context instanceof @$
+			return @$ context if context?.nodeType?
 			return null
 
 		###
@@ -266,7 +269,7 @@ define [
 		# @return boolean
 		###
 		elementInDOM: (element) ->
-			element = element.get(0) if element instanceof $
+			element = element.get(0) if element instanceof @$
 			while element = element.parentNode
 				if element is document
 					return true
@@ -281,25 +284,27 @@ define [
 		# @throws Error If using illegal attach method.
 		# @throws Error If the element you want to attach to the DOM is not a jQuery element.
 		###
-		attachToDOM: (container = _self.container, method = 'append') ->
-			return if _isAddedToDOM()
-			container = _self.bindingContext unless container?
-			$el = _self.resolveContext.call _self, container
-			throw new Error "You cannot attach to DOM before rendered" unless _self.rendered()
-			throw new Error "method must be one of the following: #{_DOMAttachMethods}" unless _.find _DOMAttachMethods, (e) -> e is method
-			throw new Error "$el must be a jQuery element" unless $el instanceof _self.$
-			$el[method] _self.$el
-			if _self.elementInDOM $el
-				_isAddedToDOM yes
+		attachToDOM: (container = @container, method = 'append') ->
+			return if @_isAddedToDOM()
+			container = @bindingContext unless container?
+			$el = @resolveContext.call @, container
+			throw new Error "You cannot attach to DOM before rendered" unless @rendered()
+			throw new Error "method must be one of the following: #{@_DOMAttachMethods}" unless _.find @_DOMAttachMethods, (e) -> e is method
+			throw new Error "$el must be a jQuery element" unless $el instanceof @$
+			$el[method] @$el
+			if @elementInDOM $el
+				@_isAddedToDOM yes
 
 		###
 		# Applying bindings to bindingsContext.
+		# When using nested viewmodels, you should initialize the nested viewmodel
+		# inside this callback.
 		# @return void
 		###
 		applyBindings: () ->
-			$bindingContext = _self.resolveContext _self.bindingContext
-			_self.ko.applyBindings _self, $bindingContext.get 0
-			_isBindingsApplied yes
+			$bindingContext = @resolveContext @bindingContext
+			@ko.applyBindings @, $bindingContext.get 0
+			@_isBindingsApplied yes
 
 		#################
 		# ViewModel API #
@@ -354,7 +359,8 @@ define [
 		# @return void
 		###
 		attachViewModel: (viewModel) ->
-			_viewModels.push viewmodel
+			throw new Error "You cannot attach an inner view model, without bindings are applied on out context" unless @_isBindingsApplied()
+			@_viewModels.push viewModel
 
 		###
 		# Detach viewmodel from the nested viewmodel array,
@@ -365,9 +371,9 @@ define [
 		# @return ViewModelBase The detached viewmodel.
 		###
 		detachViewModel: (viewModel) ->
-			if (idx = _.indexOf _viewModels, viewmodel) > -1
-				vm = _viewModels[idx]
-				_viewModels.splice idx, 1
+			if (idx = _.indexOf @_viewModels, viewModel) > -1
+				vm = @_viewModels[idx]
+				@_viewModels.splice idx, 1
 				return vm
 
 		###
@@ -376,11 +382,10 @@ define [
 		# @param ViewModelBase The previous active viewmodel.
 		# @return void
 		###
-		dispose: (previousViewModel) ->
-			unless previousViewModel is @
-				for vm in _viewModels
-					vm.dispose?(previousViewModel)
-				for key of _subscriptions
-					_subscriptions[key].dispose()
-				@$el?.remove()
-				@disposed true
+		dispose: () ->
+			for vm in @_viewModels
+				vm.dispose?()
+			for key of @_subscriptions
+				@_subscriptions[key].dispose()
+			@$el?.remove()
+			@disposed true

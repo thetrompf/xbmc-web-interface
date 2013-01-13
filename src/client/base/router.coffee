@@ -59,7 +59,7 @@ define [
 						require ["app/#{path.module}/#{path.viewmodel}"], (VM) ->
 							
 							# dispose the old active viewmodel
-							that.activeViewModel?.dispose?()
+							that.activeViewModel?.dispose?(that.activeViewModel)
 
 							# unsetting old view model
 							that.activeViewModel = null

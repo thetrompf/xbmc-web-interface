@@ -1,8 +1,19 @@
 define [
 	"base/viewmodel"
 	"text!app/home/templates/home.html"
-], (ViewModel, template) ->
-	class HomeViewModel extends ViewModel
+	"text!app/home/templates/inner.html"
+], (ViewModelBase, template, innerTemplate) ->
+	class InnerViewModel extends ViewModelBase
+
+		bindingContext: "#inner-viewmodel-test"
+		template: innerTemplate
+		innerTemplate = null
+		autoRender: yes
+
+		properties: () ->
+			innerText: @observable "It is working with only one root element"
+
+	class HomeViewModel extends ViewModelBase
 
 		bindingContext: "#main-container"
 		template: template
@@ -28,3 +39,7 @@ define [
 		initialize: (options) -> self = @
 		removeAlert: () -> @subpageAlert no
 		subpage: () -> @subpageAlert yes
+
+		bindingsApplied: () ->
+			inner = new InnerViewModel url: @url
+			@attachViewModel inner
