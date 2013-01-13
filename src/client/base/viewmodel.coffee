@@ -3,105 +3,207 @@ define [
 	"underscore"
 	"knockout"
 ], ($, _, ko, Router) ->
+	###
+	# Used as a binding context.
+	# Delivers base functionality for a ViewModel.
+	# Can be used with and without a template.
+	# @uses jQuery | _ | ko | Router
+	###
 	class ViewModelBase
 		
 		#####################
 		# _for internal use #
 		#####################
 		
-		# holds referenced to the original methods from the sub class
+		###
+		# The user defined render function
+		# @var Function | null
+		###
 		_render: null
+
+		###
+		# The user defined initialize function
+		# @var Function | null
+		###
 		_initialize: null
 
-		# is true when the compiled template is added to dom.
+		###
+		# Whether or not the viewmodel's template is added to DOM
+		# @var ko.observable<Boolean> | null
+		###
 		_isAddedToDOM: null
 
-		# is bindings applied
+		###
+		# Whether or not the ViewModel bindings has been applied to the template
+		# @var ko.observable<Boolean> | null
+		###
 		_isBindingsApplied: null
 
-		# supported methods to add template to dom (jQuery methods)
+		###
+		# The supported methods to add template to DOM (jQuery methods)
+		# @var Array<String>
+		###
 		_DOMAttachMethods: ['append', 'prepend']
 		
-		# holds the viewModels attach from here.
+		###
+		# Holds the viewModels attach from here.
 		# these should be disposed when this is view model is disposed.
-		_viewModels: null # viewmodels
-
-		# holds the subscriptions
-		_subscriptions: null
+		# @var ko.observableArray<ViewModelBase> | null
+		###
+		_viewModels: null
 
 		#############
 		# Utilities #
 		#############
 
-		$: $   # jQuery
-		_: _   # underscore
-		ko: ko # knockout
-		
-		##########################################
-		# ViewModel control variables            #
-		# override these for different behavior. #
-		##########################################
+		###
+		# jQuery reference on the ViewModel
+		# @var jQuery
+		###
+		$: $
 
-		# observable, you can subscribe to when the template is rendered.
+		###
+		# Underscore reference on the ViewModel
+		# @var _
+		###
+		_: _
+
+		###
+		# Knockout reference on the ViewModel
+		# @var ko
+		###
+		ko: ko
+		
+		###############################
+		# ViewModel control variables #
+		###############################
+
+		###
+		# Whether or not the ViewModels template has been rendered.
+		# @var ko.observable<Boolean> | null
+		###
 		rendered: null
 
-		# url observable
+		###
+		# The current URL remember to pass this observable to the nested viewmodels.
+		# if you want to subscribe to changes inside them.
+		# @var ko.observable<String> | null
+		###
 		url: null
 
-		# observable, whether the viewModel is disposed
+		###
+		# Whether the viewModel is disposed.
+		# @var ko.observable<Boolean> | null
+		###
 		disposed: null
 
-		# controlling properties
-		template: null # html text string
+		###
+		# The template to compile, as a string,
+		# you cannot call render if no template is defined.
+		#
+		# But you could give an empty string,
+		# and then use the wrap template property,
+		# to still have an $el to work on.
+		# @var String | null
+		####
+		template: null
 
-		# whether to automatically render the template after
-		# viewmodel initialization or not
-		autoRender: true
+		###
+		# Whether or not to automatically render the template after
+		# viewmodel initialization
+		# @var Boolean
+		###
+		autoRender: yes
 
-		# whether to automatically attach the template to DOM
+		###
+		# Whether or not to automatically attach the template to DOM
 		# after the template has been rendered.
-		autoAttachToDOM: true
+		# @var Boolean
+		###
+		autoAttachToDOM: yes
 
-		# can be a:
-		# * string selector
+		###
+		# The DOM node to apply this ViewModel bindings on.
+		# @see resolveContext 
+		#
+		# * String - CSS selector
+		# * DOMNode
 		# * jQuery element
-		# * function returning a jQuery element
-		# * @ 
-		# It is where the knockout JS bindings should be applied to.
+		# * Function - returning one of the above.
+		# @var String | jQuery | Function | DOMNode | null
+		###
 		bindingContext: null
 
-		# can be a:
-		# * string selector
+		###
+		# Where to insert the template into the DOM.
+		#
+		# NB! If no container is defined, then the bindingContext is used.
+		# @see resolveContext
+		#
+		# * String - CSS selector
+		# * DOMNode
 		# * jQuery element
-		# * function returning a jQuery element
+		# * Function - returning one of the above.
+		# @var String | jQuery | Function | DOMNode | null
+		###
 		container: null
 
+		###
 		# This will make the view model to always dispose,
 		# even an url change will cause that this view model
 		# will be hit again.
 		# Can be changed on-the fly, the property will be read
 		# when the router hits a new URL.
-		alwaysDispose: false
+		# @var Boolean
+		###
+		alwaysDispose: no
 		
-		# when using templates you can deside, whether to wrap the template in an element
+		###
+		# When using templates you can deside, whether to wrap the template in an element
 		# if yes, then you can deside which element you want to wrap the template in
+		# @var Boolean
+		###
 		wrapTemplate: no
-		tagName: 'div'   # string tag selector
-		className: null  # space sperated string
+		
+		###
+		# A tag name to create a dom node from.
+		# NB! This is only used when wrapTemplate is enabled.
+		# @var String
+		###
+		tagName: 'div'
+
+		###
+		# A space seperated class list to add to the wrapper element.
+		# NB! This is only used when wrapTemplate is enabled.
+		# @var String | null
+		###
+		className: null
 
 		########################
 		# Reference variableds #
 		########################
 
-		# holds the dom node reference to the root node of the template
+		###
+		# Holds the DOMNode reference to the root node of the template.
+		# @var DOMNode | null
+		###
 		el: null
-		# holds the jQuery reference to the root node of the template
+
+		###
+		# Holds the jQuery reference to the root node of the template.
+		# @var jQuery | null
+		###
 		$el: null
 
 		###############
 		# Observables #
 		###############
-		url: null # observable
+
+		###
+		# An observable that holds the current URL.
+		# @var ko.observable<String> | null
+		###
+		url: null
 
 		###
 		# Create an observable from val, if an array is given then return a ko.observableArray
@@ -253,8 +355,8 @@ define [
 		###
 		# Resolves a context to a jQuery object.
 		# NB! function should resolve to a string,jQuery element or DOMnode.
-		# @param function|string|jQuery|DOMnode context
-		# @return jQuery|null
+		# @param Function | String | jQuery | DOMNode context
+		# @return jQuery | null
 		###
 		resolveContext: (context) ->
 			return @resolveContext context.call @ if _.isFunction context
@@ -265,8 +367,8 @@ define [
 
 		###
 		# Whether or not the element is in the DOM
-		# @param jQuery|DOMNode
-		# @return boolean
+		# @param jQuery | DOMNode
+		# @return Boolean
 		###
 		elementInDOM: (element) ->
 			element = element.get(0) if element instanceof @$
@@ -276,9 +378,9 @@ define [
 			return false
 
 		###
-		# Attach the template to DOM
+		# Attach the template to the DOM.
 		# @param mixed container=this.bindingContext The container to insert the compiled template into.
-		# @param String method Which method to use to insert the compiled template with.
+		# @param String method='append' Which method to use to insert the compiled template with.
 		# @return void
 		# @throws Error If the view hasn't been rendered.
 		# @throws Error If using illegal attach method.
@@ -312,7 +414,7 @@ define [
 
 		###
 		# Initilize is called after construction.
-		# The @$el is not available yet
+		# The this.$el is not available yet
 		# so absolutely initialization work is done here.
 		# @param ... The arguments passed to the viewmodel contructor.
 		###
@@ -320,14 +422,14 @@ define [
 
 		###
 		# After initialize
-		# The @$el is now available for event handling setup.
+		# The this.$el is now available for event handling setup.
 		# @param ... The arguments passed to the viewmodel constructor.
 		###
 		afterInitialize: (options) ->
 
 		###
 		# The is the step where you can do the last minute dom
-		# manipulation of the @$el node before it is inserted to the DOM.
+		# manipulation of the this.$el node before it is inserted to the DOM.
 		# @return void
 		# @throws Error if calling render when no template is defined.
 		###
@@ -359,7 +461,8 @@ define [
 		# @return void
 		###
 		attachViewModel: (viewModel) ->
-			throw new Error "You cannot attach an inner view model, without bindings are applied on out context" unless @_isBindingsApplied()
+			unless @_isBindingsApplied()
+				throw new Error "You cannot attach an inner view model, without bindings are applied on out context"
 			@_viewModels.push viewModel
 
 		###
@@ -379,7 +482,6 @@ define [
 		###
 		# Dispose viewmodel.
 		# Setting the this.disposed to true.
-		# @param ViewModelBase The previous active viewmodel.
 		# @return void
 		###
 		dispose: () ->

@@ -4,17 +4,40 @@ define [
 	"knockout"
 	"sammy"
 ], ($, _, ko, Sammy) ->
+	###
+	# The Router mixin utilizing SammyJS.
+	# Most offen used in the application / the first initilized class.
+	# @uses jQuery | _ | ko | Sammy
+	###
 	class Router
 
+		###
 		# Holds the Sammy.js router.
+		# @var Sammy | null
+		###
 		router: null
-		# The current active main view model.
+
+		###
+		# The current active main viewmodel.
+		# @var ViewModelBase | null
+		###
 		activeViewModel: null
+
+		###
 		# The current active path.
+		# module: String
+		# viewmodel: String
+		# method: String | null 
+		#
+		# @var Object | Empty
+		###
 		activePath: {}
 
-		# observable, that holds the url
-		url: ko.observable()
+		###
+		# Observable, that holds the URL last handled by Sammy.
+		# @var ko.observable<String>
+		###
+		url: ko.observable("")
 
 		###
 		# Initialize the router
