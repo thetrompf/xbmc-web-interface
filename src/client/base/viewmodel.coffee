@@ -6,9 +6,9 @@ define [
 ], ($, _, ko, Router) ->
 	class ViewModelBase
 		
-		###
-		# _for internal use
-		###
+		#####################
+		# _for internal use #
+		#####################
 		
 		# holds referenced to the original methods from the sub class
 		_render = null
@@ -33,17 +33,18 @@ define [
 		# for bind the correct contexts, to the callbacks.
 		_self = null
 
-		###
-		# Utilities
-		###
+		#############
+		# Utilities #
+		#############
+
 		$: $   # jQuery
 		_: _   # underscore
 		ko: ko # knockout
 		
-		###
-		# ViewModel control variables
-		# override these for different behavior.
-		###
+		##########################################
+		# ViewModel control variables            #
+		# override these for different behavior. #
+		##########################################
 
 		# observable, you can subscribe to when the template is rendered.
 		rendered: null
@@ -85,65 +86,83 @@ define [
 		wrapTemplate: no
 		tagName: 'div'   # string tag selector
 
-		###
-		# Reference variableds
-		###
+		########################
+		# Reference variableds #
+		########################
 
 		# holds the dom node reference to the root node of the template
 		el: null
 		# holds the jQuery reference to the root node of the template
 		$el: null
 
-		###
-		# Observables
-		###
+		###############
+		# Observables #
+		###############
 		url: null # observable
 
+		###
+		# Create an observable from val, if an array is given then return a ko.observableArray
+		# anything else returns a ko.observable.
+		# @param mixed The value to turn into an observable
+		# @return ko.observable|ko.observableArray
+		###
 		observable: (val) ->
 			return @ko.observableArray val if @_.isArray val
 			@ko.observable val
 
-		computed: (fn, context = @, opts = {}) ->
+		###
+		# Create an computed observable.
+		# @see http://knockoutjs.com/documentation/computedObservables.html for advanced usage, e.g. writeable computed observables
+		# @param Function|Object fn The function or hash to make a computed observable of.
+		# @param Object context Which context to bind the computed observable's this to.
+		# @param Object options A hash with additional options.
+		# @return ko.computed
+		###
+		computed: (fn, context = @, options = {}) ->
+			@ko.computed fn, context, options
 
-			@ko.computed fn, context, opts
-
-		subscribe: (observable, callback, context, event) ->
-			context = context || @
+		###
+		# Creates a subscription of an observable, this is often not necessary, use computed instead.
+		# @param ko.observable|ko.computed observable The observable to subscribe to.
+		# @param Function callback The callback to call when the subscription getting notified.
+		# @param Object context=this The context to set as this in the subscription.
+		# @param String event=change The event to getting notification about.
+		###
+		subscribe: (observable, callback, context = @, event) ->
 			observable.subscribe callback, context, event
 
-		# return hash of observables
+		###
+		# The properties of the viewmodel.
+		# @param ... The arguments passed to the viewmodel constructor.
+		# @return Object The properties of the viewmodel.
+		###
 		properties: () -> {}
-		# return hash of computed observables
+
+		###
+		# The computed propeties of the viewmodel.
+		# @param ... The arguments passed to the viewmodel constructor.
+		# @return Object The computed properties of the viewmodel.
+		###
 		computedProperties: () -> {}
-		# return hash of subscriptions
-		# NB! remember to use @subscribe, instead of ko.subscribe
+
+		###
+		# The custom subscriptions of the viewmodel.
+		# NB! remember to use @subscribe, instead of ko.subscribe,
 		# in order to setting the correct context, without having to pass it yourself.
+		# @param ... The arguments passed to the viewmodel constructor.
+		# @return Object An object hash of the subscriptions.
+		###
 		subscriptions: () -> {}
 
-		# called after construction.
-		# The @$el is not available yet
-		# so absolutely initialization work is done here.
-		# The constructor options is passed here as well
-		initialize: (options) ->
-
-		# The @$el is now available for event handling setup.
-		afterInitialize: (options) ->
-
-		# The is the step where you can do the last dom
-		# manipulation of the @$el node before it is inserted to the DOM.
-		render: () ->
-		
-		# called when inserted to the DOM.
-		addedToDOM: () ->
-
-		# called when ko.applyBinding has been applied on the ViewModel.
-		bindingsApplied: () ->
-
+		###
 		# constructor
 		# DO NOT OVERRIDE UNLESS
 		# YOU KNOW WHAT YOU ARE DOING!
-		#
 		# Please override the initialize/afterInitilize instead.
+		# @param Object options The options are available on this.options
+		# @param ... Every argument inclusive options is passed to properties, computedProperties, subscriptions, initialize and afterInitialize
+		# @return void
+		###
 		constructor: (@options) ->
 
 			# saving reference.
@@ -165,9 +184,9 @@ define [
 			_subscriptions = @subscriptions arguments...
 			@_.extend @, _subscriptions
 			
-			###
-			# Initializing 
-			###
+			################
+			# Initializing #
+			################
 
 			# setting up the wrapped intialize function.
 			_initialize = @initialize
@@ -203,12 +222,15 @@ define [
 			if @autoRender
 				@render()
 
-		# jQuery template "engine", having same interface as handlebars
-		# compile returns a function, that takes context as argument, and returns compiled HTML
-		compile: (html) -> (context) -> html
-
-		# attach the template to DOM
-		# call the addedToDOM callback when 
+		###
+		# Attach the template to DOM
+		# @param mixed container=this.bindingContext The container to insert the compiled template into.
+		# @param String method Which method to use to insert the compiled template with.
+		# @return void
+		# @throws Error If the view hasn't been rendered.
+		# @throws Error If using illegal attach method.
+		# @throws Error If the element you want to attach to the DOM is not a jQuery element.
+		###
 		attachToDOM: (container = @bindingContext, method = 'append') ->
 			$el = _resolveContainer.call _self, container
 			throw new Error "You cannot attach to DOM before rendered" unless @rendered()
@@ -218,22 +240,81 @@ define [
 			_isAddedToDOM = yes
 			@addedToDOM()
 
-		# attach view model as a nested view model
+		#################
+		# ViewModel API #
+		#################
+
+		###
+		# Initilize is called after construction.
+		# The @$el is not available yet
+		# so absolutely initialization work is done here.
+		# @param ... The arguments passed to the viewmodel contructor.
+		###
+		initialize: (options) ->
+
+		###
+		# After initialize
+		# The @$el is now available for event handling setup.
+		# @param ... The arguments passed to the viewmodel constructor.
+		###
+		afterInitialize: (options) ->
+
+		###
+		# The is the step where you can do the last minute dom
+		# manipulation of the @$el node before it is inserted to the DOM.
+		# @return void
+		# @throws Error if calling render when no template is defined.
+		###
+		render: () ->
+		
+		###
+		# Called when inserted to the DOM.
+		# @return void
+		###
+		addedToDOM: () ->
+
+		###
+		# Called when ko.applyBinding has been applied on the ViewModel.
+		# @return void
+		###
+		bindingsApplied: () ->
+
+		###
+		# jQuery template "engine", having same interface as handlebars
+		# compile returns a function, that takes context as argument, and returns compiled HTML
+		# @param String html The template string to compile
+		# @return Funciton That evaluates to a string with the context resolved.
+		###
+		compile: (html) -> (context) -> html
+
+		###
+		# Makes this viewmodel aware of another viewmodel to dispose, when this one gets disposed.
+		# @param ViewModelBase viewModel The viewmodel to attach.
+		# @return void
+		###
 		attachViewModel: (viewModel) ->
 			_viewModels.push viewmodel
 
-		# detach view model from the nested viewmodel array,
+		###
+		# Detach viewmodel from the nested viewmodel array,
 		# and return it.
-		#
 		# NB! the view model will not be disposed.
 		# so you will have to do that manually.
+		# @param ViewModelBase viewModel The viewModel to detach.
+		# @return ViewModelBase The detached viewmodel.
+		###
 		detachViewModel: (viewModel) ->
 			if (idx = _.indexOf _viewModels, viewmodel) > -1
 				vm = _viewModels[idx]
 				_viewModels.splice idx, 1
 				return vm
 
-		# dispose viewmodel
+		###
+		# Dispose viewmodel.
+		# Setting the this.disposed to true.
+		# @param ViewModelBase The previous active viewmodel.
+		# @return void
+		###
 		dispose: (previousViewModel) ->
 			unless previousViewModel is @
 				for vm in _viewModels
