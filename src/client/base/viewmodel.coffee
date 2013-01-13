@@ -2,7 +2,6 @@ define [
 	"jquery"
 	"underscore"
 	"knockout"
-	"base/router"
 ], ($, _, ko, Router) ->
 	class ViewModelBase
 		
@@ -15,7 +14,10 @@ define [
 		_initialize = null
 
 		# is true when the compiled template is added to dom.
-		_isAddedToDOM = false
+		_isAddedToDOM = null
+
+		# is bindings applied
+		_isBindingsApplied = null
 
 		# supported methods to add template to dom (jQuery methods)
 		_DOMAttachMethods = ['append', 'prepend']
@@ -26,9 +28,6 @@ define [
 
 		# holds the subscriptions
 		_subscriptions = null
-
-		# see bindingContext property
-		_resolveContainer = Router::resolveBindingContext
 
 		# for bind the correct contexts, to the callbacks.
 		_self = null
@@ -70,9 +69,15 @@ define [
 		# * string selector
 		# * jQuery element
 		# * function returning a jQuery element
-		# 
-		# It is here the template will be rendered in as well.
+		# * @ 
+		# It is where the knockout JS bindings should be applied to.
 		bindingContext: null
+
+		# can be a:
+		# * string selector
+		# * jQuery element
+		# * function returning a jQuery element
+		container: null
 
 		# This will make the view model to always dispose,
 		# even an url change will cause that this view model
@@ -178,12 +183,27 @@ define [
 			# initializing observable @rendered property.
 			@rendered = @observable no
 
+			_isAddedToDOM = @observable false
+			_isBindingsApplied = @observable false
+
 			# setting up properties
 			@_.extend @, @properties arguments...
 			@_.extend @, @computedProperties arguments...
 			_subscriptions = @subscriptions arguments...
 			@_.extend @, _subscriptions
 			
+			# setting up observable of automatic callback calling when view is inserted into DOM
+			@computed () ->
+				if _isAddedToDOM() is yes
+					_self.addedToDOM()
+					_self.applyBindings() unless _isBindingsApplied() is yes
+					for vm in _viewModels
+						vm.attachToDOM() if vm.autoAttachToDOM
+
+			@computed () ->
+				if _isBindingsApplied() is yes
+					_self.bindingsApplied()
+
 			################
 			# Initializing #
 			################
@@ -192,28 +212,33 @@ define [
 			_initialize = @initialize
 			@initialize = (options) ->
 				_initialize.call _self, options
-				if @wrapTemplate
-					@$el = @$ "<#{@tagName} />"
-					@el = @$el.get 0
-				else if @template?
+				if _self.wrapTemplate
+					_self.$el = _self.$ "<#{@tagName} />"
+					_self.el = _self.$el.get 0
+				else if _self.template?
 					# This only works if the template only has one root element.
-					@$el = @$ (@compile @template) @
-					@el = @$el.get 0
-				else if _.isString @$el
-					@$el = @$ @$el
-					@el = @$el.get 0
-				@afterInitialize options
+					_self.$el = _self.$ (_self.compile _self.template) _self
+					_self.el = _self.$el.get 0
+				else if _.isString _self.$el
+					_self.$el = _self.$ _self.$el
+					_self.el = _self.$el.get 0
+				_self.afterInitialize options
 
 			# setting up the wrapped render function
 			_render = @render
 			@render = () ->
-				throw new Error "You have to define a template to use render" unless @template?
-				@$el.append (@compile @template) @ if @wrapTemplate
+				throw new Error "You have to define a template to use render" unless _self.template?
+				_self.$el.append (_self.compile _self.template) _self if _self.wrapTemplate
 				_render.call _self
-				@rendered yes
+				_self.rendered yes
 
-				$elm = _resolveContainer.call _self, @bindingContext
-				@attachToDOM $elm if @autoAttachToDOM
+				# applying context to element if the binding context is not in the DOM.
+				$bindingContext = _self.resolveContext _self.bindingContext
+				_self.applyBindings() unless _self.elementInDOM $bindingContext
+
+				if _self.autoAttachToDOM
+					# setting up the container for where the template should be rendered
+					_self.attachToDOM()
 
 			# call initialize
 			@initialize @options
@@ -221,6 +246,31 @@ define [
 			# render if autoRender is enabled
 			if @autoRender
 				@render()
+
+		###
+		# Resolves a context to a jQuery object.
+		# NB! function should resolve to a string,jQuery element or DOMnode.
+		# @param function|string|jQuery|DOMnode context
+		# @return jQuery|null
+		###
+		resolveContext: (context) ->
+			return _self.resolveContext context.call _self if _.isFunction context
+			return $ context if _.isString context
+			return context if context instanceof $
+			return $ context if context?.nodeType?
+			return null
+
+		###
+		# Whether or not the element is in the DOM
+		# @param jQuery|DOMNode
+		# @return boolean
+		###
+		elementInDOM: (element) ->
+			element = element.get(0) if element instanceof $
+			while element = element.parentNode
+				if element is document
+					return true
+			return false
 
 		###
 		# Attach the template to DOM
@@ -231,14 +281,25 @@ define [
 		# @throws Error If using illegal attach method.
 		# @throws Error If the element you want to attach to the DOM is not a jQuery element.
 		###
-		attachToDOM: (container = @bindingContext, method = 'append') ->
-			$el = _resolveContainer.call _self, container
-			throw new Error "You cannot attach to DOM before rendered" unless @rendered()
+		attachToDOM: (container = _self.container, method = 'append') ->
+			return if _isAddedToDOM()
+			container = _self.bindingContext unless container?
+			$el = _self.resolveContext.call _self, container
+			throw new Error "You cannot attach to DOM before rendered" unless _self.rendered()
 			throw new Error "method must be one of the following: #{_DOMAttachMethods}" unless _.find _DOMAttachMethods, (e) -> e is method
-			throw new Error "$el must be a jQuery element" unless $el instanceof @$
-			$el[method] @$el
-			_isAddedToDOM = yes
-			@addedToDOM()
+			throw new Error "$el must be a jQuery element" unless $el instanceof _self.$
+			$el[method] _self.$el
+			if _self.elementInDOM $el
+				_isAddedToDOM yes
+
+		###
+		# Applying bindings to bindingsContext.
+		# @return void
+		###
+		applyBindings: () ->
+			$bindingContext = _self.resolveContext _self.bindingContext
+			_self.ko.applyBindings _self, $bindingContext.get 0
+			_isBindingsApplied yes
 
 		#################
 		# ViewModel API #
@@ -274,7 +335,7 @@ define [
 		addedToDOM: () ->
 
 		###
-		# Called when ko.applyBinding has been applied on the ViewModel.
+		# Called when ko.applyBindings has been applied on the ViewModel.
 		# @return void
 		###
 		bindingsApplied: () ->

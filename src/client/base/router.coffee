@@ -76,16 +76,8 @@ define [
 							# setting the activePath hash to the currently resolved path hash.
 							that.activePath = path
 
-							# resolve the bindingContext of the viewmodel
-							bindingContext = that.resolveBindingContext vm.bindingContext
-
 							# calling the method of the of the path hash, if any is defined.
 							vm[path.method]() if path.method? and _.isFunction vm[path.method]
-							
-							# applying bindings if a binding context has been defined.
-							if bindingContext?
-								ko.applyBindings vm, bindingContext.get(0)
-								vm.bindingsApplied()
 
 				# setting up routes.
 				for r in routes
@@ -101,19 +93,6 @@ define [
 				# return Sammy
 				return @
 			.run()
-
-		###
-		# Resolves a context to a jQuery object.
-		# NB! function should resolve to a string,jQuery element or DOMnode.
-		# @param function|string|jQuery|DOMnode context
-		# @return jQuery|null
-		###
-		resolveBindingContext: (context) ->
-			return @resolveBindingContext context() if _.isFunction context
-			return $ context if _.isString context
-			return context if context instanceof $
-			return $ context if context.nodeType?
-			return null
 
 		###
 		# Parses a route path to an activePath hash, used internally.
