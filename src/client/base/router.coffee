@@ -27,7 +27,7 @@ define [
 							that.url url
 							that.activePath = path
 							that.activeViewModel[path.method]() if path.method? and _.isFunction that.activeViewModel[path.method]
-							return @
+							return @ unless that.activeViewModel.alwaysDispose
 
 						require ["app/#{path.module}/#{path.viewmodel}"], (VM) ->
 							

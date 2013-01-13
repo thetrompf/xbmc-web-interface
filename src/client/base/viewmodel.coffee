@@ -72,6 +72,13 @@ define [
 		# 
 		# It is here the template will be rendered in as well.
 		bindingContext: null
+
+		# This will make the view model to always dispose,
+		# even an url change will cause that this view model
+		# will be hit again.
+		# Can be changed on-the fly, the property will be read
+		# when the router hits a new URL.
+		alwaysDispose: false
 		
 		# when using templates you can deside, whether to wrap the template in an element
 		# if yes, then you can deside which element you want to wrap the template in
