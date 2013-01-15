@@ -16,13 +16,14 @@ define [
 		moreMovies: () ->
 			if @moviesLeft()
 				@videolibrary.getMovieList
-					success: (msg) ->
-						msg.limits.start = msg.limits.end
-						msg.limits.end += @moviesPerPage unless msg.limits.end is msg.limits.total
-						@movieLimits msg.limits
-						@movies @_.union @movies(), msg.movies
-					error: (msg) ->
-						debugger
+					callback:
+						success: (msg) ->
+							msg.limits.start = msg.limits.end
+							msg.limits.end += @moviesPerPage unless msg.limits.end is msg.limits.total
+							@movieLimits msg.limits
+							@movies @_.union @movies(), msg.movies
+						error: (msg) ->
+							debugger
 					limits: @movieLimits()
 					context: @
 
@@ -59,4 +60,10 @@ define [
 		initialize: (options) ->
 			@client = new WSClient.get()
 			@videolibrary = new VideoLibrary @client
-		
+			@videolibrary.bind "OnScanFinished.movies", (msg) ->
+				@videolibrary.unbind "movies"
+			, @
+
+		dispose: () ->
+			super
+			@videolibrary.dispose()

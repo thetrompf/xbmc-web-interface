@@ -2,8 +2,34 @@ This is movies template
 
 <div class="row-fluid">
 	<button class="btn btn-medium" data-bind="click: resetMovies, disable: resetDisable">Reset movies list</button>
-	<ul data-bind="foreach: movies">
-		<li><span data-bind="text: title"></span> (<span data-bind="text: year"></span>)</li>
-	</ul>
+
+	<table class="table table-bordered table-striped">
+		<colgroup>
+			<col class="span1" />
+			<col />
+			<col />
+			<col />
+			<col class="span1" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Title</th>
+				<th>Sort title</th>
+				<th>Original title</th>
+				<th>Year</th>
+			</tr>
+		</thead>
+		<tbody data-bind="foreach: movies">
+			<tr>
+				<td data-bind="text: movieid"></td>
+				<td data-bind="text: title"></td>
+				<td data-bind="text: sorttitle"></td>
+				<td data-bind="text: originaltitle"></td>
+				<td data-bind="text: year"></td>
+			</tr>
+		</tbody>
+	</table>
+	
 	<button class="btn btn-medium" data-bind="click: moreMovies, disable: moviesLeft() != true">More movies</button>
 </div>
