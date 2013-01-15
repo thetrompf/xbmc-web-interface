@@ -52,6 +52,13 @@ define [
 		###
 		_viewModels: null
 
+		###
+		# Holds the subscriptions attach to the viewmodel.
+		# This is necessary in order to get disposal to work properly.
+		# @var Object<String, ko.subscriptions> | null
+		###
+		_subscriptions: null
+
 		#############
 		# Utilities #
 		#############
@@ -83,13 +90,6 @@ define [
 		# @var ko.observable<Boolean> | null
 		###
 		rendered: null
-
-		###
-		# The current URL remember to pass this observable to the nested viewmodels.
-		# if you want to subscribe to changes inside them.
-		# @var ko.observable<String> | null
-		###
-		url: null
 
 		###
 		# Whether the viewModel is disposed.
@@ -200,12 +200,6 @@ define [
 		###############
 
 		###
-		# An observable that holds the current URL.
-		# @var ko.observable<String> | null
-		###
-		url: null
-
-		###
 		# Create an observable from val, if an array is given then return a ko.observableArray
 		# anything else returns a ko.observable.
 		# @param mixed The value to turn into an observable
@@ -273,10 +267,6 @@ define [
 			# saving reference.
 			_self = @
 
-			# setting up observable url property.
-			@url = @options.url
-			delete @options['url']
-
 			@_viewModels = []
 
 			# initializing observable @disposed property.
@@ -291,7 +281,8 @@ define [
 			# setting up properties
 			@_.extend @, @properties arguments...
 			@_.extend @, @computedProperties arguments...
-			@_.extend @, @subscriptions arguments...
+			@_subscriptions = @subscriptions arguments...
+			@_.extend @, @_subscriptions
 			
 			# setting up observable of automatic callback calling when view is inserted into DOM
 			@computed () ->

@@ -37,14 +37,14 @@ define [
 		# Observable, that holds the URL last handled by Sammy.
 		# @var ko.observable<String>
 		###
-		url: ko.observable("")
+		url: ko.observable ""
 
 		###
 		# Initialize the router
 		# @param array<routeHash> routes
 		# @return Sammy
 		###
-		initRouter: (routes) ->
+		initRouter: (routes, options) ->
 			that = @
 			@router = Sammy () ->
 				
@@ -82,7 +82,7 @@ define [
 						require ["app/#{path.module}/#{path.viewmodel}"], (VM) ->
 							
 							# dispose the old active viewmodel
-							that.activeViewModel?.dispose?(that.activeViewModel)
+							that.activeViewModel?.dispose?()
 
 							# unsetting old view model
 							that.activeViewModel = null
@@ -91,7 +91,7 @@ define [
 							that.url url
 
 							# initialize the new viewmodel
-							vm = new VM url: that.url
+							vm = new VM options
 
 							# setting the active view model to this one.
 							that.activeViewModel = vm
