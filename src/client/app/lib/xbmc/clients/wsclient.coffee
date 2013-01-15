@@ -36,7 +36,7 @@ define [
 
 		###
 		# Get unique request identifier.
-		# @return String
+		# @return string
 		###
 		_getId = () -> "#{_prexix}#{_id++}"
 		
@@ -53,8 +53,8 @@ define [
 
 		###
 		# Run the a callback queue.
-		# @var Array callbacks
-		# @var Object msg
+		# @var array callbacks
+		# @var object msg
 		###
 		_runCallbacks = (callbacks, msg) ->
 			for cbObj in callbacks
@@ -73,10 +73,11 @@ define [
 
 		###
 		# Constructs a xbmc websocket client.
-		# @var String host
-		# @var String port
+		# @var string host
+		# @var string port
+		# @var string protocol
 		###
-		constructor: (host, port) ->
+		constructor: (host, port, protocol) ->
 			return @ if _ws?
 			_host = host
 			_port = port
@@ -117,7 +118,7 @@ define [
 
 		###
 		# Handling success response from server.
-		# @var Object msg
+		# @var object msg
 		# @return void
 		###
 		success: (msg) ->
@@ -138,7 +139,7 @@ define [
 
 		###
 		# Handling error response from the server.
-		# @var Object msg
+		# @var object msg
 		# @return void
 		###
 		error: (msg) ->
@@ -152,9 +153,9 @@ define [
 
 		###
 		# Send message to the xbmc server.
-		# @var Object msg
-		# @var Object | Function callback success, error
-		# @var Object context
+		# @var object msg
+		# @var object | function callback success, error
+		# @var object context
 		# @return void
 		###
 		send: (msg, callback, context) ->
@@ -193,9 +194,9 @@ define [
 
 		###
 		# Bind a callback to a notification.
-		# @var String event Event is a prefix of the JSONRPC notification methods.
-		# @var Function callback(msg)
-		# @var Object context
+		# @var string event Event is a prefix of the JSONRPC notification methods.
+		# @var function callback(msg)
+		# @var object context
 		# @return void
 		###
 		bind: (event, callback, context) ->
@@ -206,7 +207,7 @@ define [
 		
 		###
 		# Unbind a callback from an event.
-		# @var String event
+		# @var string event
 		# @var Funcion callback
 		###
 		unbind: (event, callback) ->
@@ -224,7 +225,7 @@ define [
 		###
 		# Unbind all notifications.
 		# If no event specified, then unbind all callbacks. 
-		# @var String event
+		# @var string event
 		# @return void
 		###
 		unbindAll: (event) ->
@@ -234,7 +235,10 @@ define [
 
 	class WSClient
 		_instance = null
-		@get = () ->
+		@get = (host, port, protocol) ->
+			console.warn "Protocol choice has been ignored, ws:// is the only supported protocal by this client" if protocal?
+			host = "localhost" unless host?
+			port = "9090" unless port?
 			return _instance if _instance?
-			return _instance = (new _WSClient "localhost", "9090").connect()
+			return _instance = (new _WSClient host, port, protocol).connect()
 
