@@ -5,7 +5,7 @@ path = require 'path'
 app = express()
 
 app.configure () ->
-  app.set 'port', process.env.PORT || 8080
+  app.set 'port', process.env.PORT || 9091
   app.use express.favicon()
   app.use express.logger 'dev'
   app.use express.bodyParser()
