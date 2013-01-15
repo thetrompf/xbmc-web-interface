@@ -8,5 +8,12 @@ define [
 		template: template
 		template = null
 
-		properties: () ->
+		properties: (options) ->
+			options.searchPlaceholder "Search music..."
 			title: @observable "Music"
+
+		subscriptions: (options) ->
+			searchDelayed: @subscribe(options.searchDelayed, (newValue) ->
+				if newValue.length > 3
+					console.log "Search music: #{newValue}"
+			)

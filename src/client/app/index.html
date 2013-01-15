@@ -17,6 +17,9 @@
 					<a data-bind="attr:{ href: link }, text: label"></a>
 				</li>
 			</ul>
+			<form class="navbar-search pull-right" id="navbar-search-form">
+				<input type="text" tabindex="1" class="search-query" id="navbar-search" data-bind="value: search, valueUpdate: 'afterkeydown', attr: { placeholder: searchPlaceholder }" />
+			</form>
 		</div>
 	</div>
 </div>

@@ -12,7 +12,7 @@ define [
 		$el: "#topmenu"
 		bindingContext: "#topmenu"
 
-		properties: () ->
+		properties: (options) ->
 			menu: @observable [
 				link: "/home"
 				label: "Home"
@@ -33,6 +33,13 @@ define [
 				link: "/settings"
 				label: "Settings"
 			]
+			search: @observable ""
+			searchPlaceholder: @observable ""
+			url: options.url
+
+		computedProperties: (options) ->
+			self = @
+			searchDelayed: (@computed self.search).extend (throttle: 300)
 
 		startsWith: (str, starts) ->
 			return true if starts is ''
@@ -43,7 +50,14 @@ define [
 
 		afterInitialize: (options) ->
 			@initMenu @menu()
-			@ko.applyBindings @, @el
+			@applyBindings()
+			@initEventHandlers()
+
+		initEventHandlers: () ->
+			@$("#navbar-search-form").submit (e) =>
+				e.preventDefault()
+				e.stopPropagation()
+				return false
 
 		initMenu: (menu) ->
 			that = @
@@ -68,4 +82,9 @@ define [
 
 		constructor: (args) ->
 			@topmenu = new TopmenuViewModel url: @url
-			@initRouter routes
+			options =
+				url: @url
+				search: @topmenu.search
+				searchDelayed: @topmenu.searchDelayed
+				searchPlaceholder: @topmenu.searchPlaceholder
+			@initRouter routes, options

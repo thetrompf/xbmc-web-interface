@@ -18,10 +18,9 @@ define [
 		bindingContext: "#main-container"
 		template: template
 		template = null
-
 		self = null
 
-		properties: () ->
+		properties: (options) ->
 			title: @observable "Home"
 			name: @observable ""
 			names: @observable []
@@ -30,13 +29,21 @@ define [
 		computedProperties: () ->
 			shortName: @computed () -> @name().length < 20
 
+		subscriptions: (options) ->
+			searchDelayed: @subscribe(options.searchDelayed, (newValue) ->
+				if newValue.length > 3
+					console.log "Search home: #{newValue}"
+			)
+
+		initialize: (options) ->
+			options.searchPlaceholder "Search home..."
+
 		addHandler: () ->
 			@names.push name: @name()
 			@name ""
 
-		removeHandler: () -> self.names.remove @
+		removeHandler: (name) => @names.remove name
 
-		initialize: (options) -> self = @
 		removeAlert: () -> @subpageAlert no
 		subpage: () -> @subpageAlert yes
 
