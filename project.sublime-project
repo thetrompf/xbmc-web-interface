@@ -22,7 +22,41 @@
 			"shell": true,
 			"env": {
 				"ENV": "development"
-			}
+			},
+			"variants": [
+				{
+					"cmd": ["cake build:all"],
+					"name": "Build all"
+				},
+				{
+					"cmd": ["cake build:app"],
+					"name": "Build client and server"
+				},
+				{
+					"cmd": ["cake build:deps"],
+					"name": "Build dependencies"
+				},
+				{
+					"cmd": ["cake build:client"],
+					"name": "Build client"
+				},
+				{
+					"cmd": ["cake build:server"],
+					"name": "Build server"
+				},
+				{
+					"cmd": ["cake clean:all"],
+					"name": "Clean all"
+				},
+				{
+					"cmd": ["cake clean:server"],
+					"name": "Clean server"
+				},
+				{
+					"cmd": ["cake clean:client"],
+					"name": "Clean client"
+				}
+			]
 		}
 	]
 }

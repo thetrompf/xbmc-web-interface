@@ -239,36 +239,32 @@ cleanClient = (options, cont) ->
 	wrench.rmdirSyncRecursive output.client
 	cont?()
 
-task 'build:all', (options) ->
+task 'build:all', 'Build all', (options) ->
 	createDirs () ->
 		buildAll options, () -> return
 
-task "build:deps", (options) ->
+task "build:deps", 'Build dependcies', (options) ->
 	createDirs () ->
 		copyDeps options, () -> return
 
-task "build:jquery", (options) ->
-	createDirs () ->
-		buildjQuery options, () -> return
-
-task "build:app", (options) ->
+task "build:app", 'Build client and server', (options) ->
 	createDirs () ->
 		buildApp options, () -> return
 
-task "build:server", (options) ->
+task "build:server", 'Build server', (options) ->
 	createDirs () ->
 		buildServer options, () -> return
 
-task "build:client", (options) ->
+task "build:client", 'Build client', (options) ->
 	createDirs () ->
 		buildClient options, () -> return
 
-task "clean:server", (options) ->
+task "clean:server", 'Clean server', (options) ->
 	cleanServer options, () -> return
 
-task "clean:client", (options) ->
+task "clean:client", 'Clean client', (options) ->
 	cleanClient options, () -> return
 
-task "clean:all", (options) ->
+task "clean:all", 'Clean all', (options) ->
 	cleanServer options, () ->
 		cleanClient options, () -> return
