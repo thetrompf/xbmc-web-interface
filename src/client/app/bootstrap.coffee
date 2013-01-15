@@ -7,6 +7,7 @@ requirejs.config
 		bootstrap: "vendor/bootstrap/bootstrap-all"
 		sammy: "vendor/sammy/sammy"
 		text: "vendor/require/require.text"
+		xbmc: "app/lib/xbmc"
 	shim: 
 		underscore:
 			exports: "_"

@@ -2,8 +2,9 @@ define [
 	"jquery"
 	"underscore"
 	"knockout"
-], ($, _, ko) ->
-	class _WSClient
+	"xbmc/base/client"
+], ($, _, ko, ClientBase) ->
+	class _WSClient extends ClientBase
 
 		CREATED = 0
 		SENT = 1
@@ -44,15 +45,17 @@ define [
 			unless @isConnected()
 				_ws = new WebSocket "ws://#{_host}:#{_port}/jsonrpc"
 				_ws.onmessage = @recieve
-				_ws.onerror = @error
+				_ws.onerror = (msg) ->
+					console?.error "The websocket came back with an error", msg
 				_ws.onopen = (msg) ->
 					_connected yes
 				_ws.onclose = (msg) ->
 					_connected no
 			return @
 
-		recieve: (msg) ->
+		recieve: (msg) =>
 			msg = JSON.parse msg.data
+			return @error msg if msg.error?
 			if (q = _queue[msg.id])?
 				if q.context?
 					q.defer.resolveWith q.context, [msg.result]
@@ -65,12 +68,11 @@ define [
 				debugger
 
 		error: (msg) ->
-			msg = JSON.parse msg.data
 			if (q = _queue[msg.id])?
 				if q.context?
-					q.defer.rejectWith q.context, [msg.result]
+					q.defer.rejectWith q.context, [msg.error]
 				else
-					q.defer.reject msg.result
+					q.defer.reject msg.error
 				delete _queue[msg.id]
 
 		send: (msg, callbacks, context) ->
