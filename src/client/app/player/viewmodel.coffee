@@ -13,15 +13,14 @@ define [
 
 		properties: () ->
 			playerid: @observable -1
-			playerVisible: @observable no
 			isPlaying: @observable no
 
 		computedProperties: () ->
 			playButtonContent: @computed () ->
 				if @isPlaying()
-					return '<icon class="icon-pause"></icon> Pause'
+					return '<icon class="icon-pause"></icon>'
 				else
-					return '<icon class="icon-play"></icon> Play'
+					return '<icon class="icon-play"></icon>'
 
 		togglePlay: () ->
 			@player.PlayPause
@@ -38,22 +37,27 @@ define [
 			@player = new Player @client
 
 		afterInitialize: (options) ->
+			@initPlayer()
+			@initEventListiners()
+
+		initPlayerState: () ->
+			@player.GetProperties
+				playerid: @playerid()
+				properties: [ "speed" ]
+				callback: (data) ->
+					@isPlaying yes if data.speed > 0
+				context: @
+
+		initPlayer: () ->
 			@player.GetActivePlayers
 				callback:
 					success: (data) ->
-						debugger if data.length > 1
 						if (p = data[0])?
 							@playerid p.playerid
-							@player.GetProperties
-								playerid: p.playerid
-								properties: [ "speed" ]
-								callback: (data) ->
-									@isPlaying yes if data.speed > 0
-								context: @
+							@initPlayerState p.playerid
 					error: (data) ->
 						console.error "An error occured when retreiving active players"
 				context: @
-			@initEventListiners()
 
 		initEventListiners: () ->
 			@player.bind "OnPlay", (data) ->
