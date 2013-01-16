@@ -104,6 +104,10 @@ define [
 					_connected yes
 				_ws.onclose = (msg) ->
 					_connected no
+					setTimeout () =>
+						@connect()
+						console?.log "Connection closed trying to reconnect in 5 seconds"
+					, 5000
 			return @
 
 		###
@@ -169,8 +173,9 @@ define [
 			# treating callback as a success callback
 			# if only a function is provided as callback
 			if _.isFunction callback
+				_callback = callback
 				callback = {}
-				callback.success = callback
+				callback.success = _callback
 			
 			throw new Error "A success callback has to be provided" unless callback.success?
 
