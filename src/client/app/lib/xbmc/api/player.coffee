@@ -30,6 +30,9 @@ define [
 		###
 		GetActivePlayers: (options) ->
 			method = "#{@_API}.GetActivePlayers"
+			@client.send
+				method: method
+			, options.callback, options.context
 			return @
 
 		###
@@ -62,6 +65,12 @@ define [
 		###
 		GetProperties: (options) ->
 			method = "#{@_API}.GetProperties"
+			@client.send
+				method: method
+				params:
+					playerid: options.playerid
+					properties: options.properties
+			, options.callback, options.context
 			return @
 
 		###
@@ -129,6 +138,12 @@ define [
 		###
 		PlayPause: (options) ->
 			method = "#{@_API}.PlayPause"
+			playerid = if options.playerid? then options.playerid else 1
+			@client.send
+				method: method
+				params:
+					playerid: playerid
+			, options.callback, options.context
 			return @
 
 		###
@@ -273,6 +288,11 @@ define [
 		###
 		Stop: (options) ->
 			method = "#{@_API}.Stop"
+			@client.send
+				method: method
+				params:
+					playerid: options.playerid
+			, options.callback, options.context
 			return @
 
 		###

@@ -3,7 +3,8 @@ define [
 	"text!app/movies/templates/movies.html"
 	"xbmc/clients/wsclient"
 	"xbmc/api/videolibrary"
-], (ViewModel, template, WSClient, VideoLibrary) ->
+	"xbmc/api/player"
+], (ViewModel, template, WSClient, VideoLibrary, Player) ->
 	class MoviesViewModel extends ViewModel
 
 		bindingContext: "#main-container"
@@ -58,12 +59,11 @@ define [
 			)
 
 		initialize: (options) ->
-			@client = new WSClient.get()
+			@client = new WSClient.get "localhost", 9090
 			@videolibrary = new VideoLibrary @client
-			@videolibrary.bind "OnScanFinished.movies", (msg) ->
-				@videolibrary.unbind "movies"
-			, @
+			@player = new Player @client
 
 		dispose: () ->
 			super
 			@videolibrary.dispose()
+			@player.dispose()

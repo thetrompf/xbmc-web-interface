@@ -3,7 +3,8 @@ define [
 	"base/router"
 	"app/routes"
 	"base/viewmodel"
-], (_, Router, routes, ViewModelBase) ->
+	"app/player/viewmodel"
+], (_, Router, routes, ViewModelBase, PlayerViewModel) ->
 	class TopmenuViewModel extends ViewModelBase
 
 		# autoRender is false, because the view is already in the DOM
@@ -87,4 +88,5 @@ define [
 				search: @topmenu.search
 				searchDelayed: @topmenu.searchDelayed
 				searchPlaceholder: @topmenu.searchPlaceholder
+			@player = new PlayerViewModel options
 			@initRouter routes, options
