@@ -1,4 +1,4 @@
-# Developing insructions #
+# Developing instructions #
 You need nodejs and some global npm packages installed.
 
 		npm install -g coffee-script less nodemon
