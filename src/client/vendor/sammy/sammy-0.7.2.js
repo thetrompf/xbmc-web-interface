@@ -275,7 +275,7 @@ $.extend(Sammy.DefaultLocationProxy.prototype , {
           app.trigger('location-changed');
         });
         // bind to link clicks that have routes
-        $('a').live('click.history-' + this.app.eventNamespace(), function(e) {
+        $('body').delegate('a','click.history-' + this.app.eventNamespace(), function(e) {
           if (e.isDefaultPrevented() || e.metaKey || e.ctrlKey) {
             return;
           }
@@ -299,7 +299,7 @@ $.extend(Sammy.DefaultLocationProxy.prototype , {
     unbind: function() {
       $(window).unbind('hashchange.' + this.app.eventNamespace());
       $(window).unbind('popstate.' + this.app.eventNamespace());
-      $('a').die('click.history-' + this.app.eventNamespace());
+      $('body').undelegate('a','click.history-' + this.app.eventNamespace());
       Sammy.DefaultLocationProxy._bindings--;
       if (Sammy.DefaultLocationProxy._bindings <= 0) {
         window.clearInterval(Sammy.DefaultLocationProxy._interval);

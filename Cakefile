@@ -105,7 +105,7 @@ copyjQuery = (options, cont) ->
 	jqueryInputPath = path.join input.vendor, "jquery"
 	jqueryOutputPath = path.join output.vendor, "jquery"
 	mkdirp jqueryOutputPath, () ->
-		copyFile (path.join jqueryInputPath, "jquery.js"), (path.join jqueryOutputPath, "jquery.js"), () ->
+		copyFile (path.join jqueryInputPath, "jquery-1.9.0.js"), (path.join jqueryOutputPath, "jquery.js"), () ->
 			cont?()
 
 copyKnockoutJs = (options, cont) ->
@@ -113,7 +113,7 @@ copyKnockoutJs = (options, cont) ->
 	knockoutInputPath = path.join input.vendor, "knockout"
 	knockoutOutputPath = path.join output.vendor, "knockout"
 	mkdirp knockoutOutputPath, () ->
-		copyFile (path.join knockoutInputPath, "knockout.js"), (path.join knockoutOutputPath, "knockout.js"), () ->
+		copyFile (path.join knockoutInputPath, "knockout-2.2.0.js"), (path.join knockoutOutputPath, "knockout.js"), () ->
 			cont?()
 
 copyRequireJs = (options, cont) ->
@@ -121,8 +121,8 @@ copyRequireJs = (options, cont) ->
 	requireInputPath = path.join input.vendor, "require"
 	requireOutputPath = path.join output.vendor, "require"
 	mkdirp requireOutputPath
-	copyFile (path.join requireInputPath, "require.js"), (path.join requireOutputPath, "require.js"), () ->
-		copyFile (path.join requireInputPath, "require.text.js"), (path.join requireOutputPath, "require.text.js"), () ->
+	copyFile (path.join requireInputPath, "require-2.1.2.js"), (path.join requireOutputPath, "require.js"), () ->
+		copyFile (path.join requireInputPath, "require.text-2.0.3.js"), (path.join requireOutputPath, "require.text.js"), () ->
 			cont?()
 
 copyBootstrapJs = (options, cont) ->
@@ -145,7 +145,7 @@ copyUnderscoreJs = (options, cont) ->
 	underscoreInputPath = path.join input.vendor, "underscore"
 	underscoreOutputPath = path.join output.vendor, "underscore"
 	mkdirp underscoreOutputPath, () ->
-		copyFile (path.join underscoreInputPath, "underscore.js"), (path.join underscoreOutputPath, "underscore.js"), () ->
+		copyFile (path.join underscoreInputPath, "underscore-1.4.3.js"), (path.join underscoreOutputPath, "underscore.js"), () ->
 			cont?()
 
 copySammyJs = (options, cont) ->
@@ -153,7 +153,7 @@ copySammyJs = (options, cont) ->
 	sammyInputPath = path.join input.vendor, "sammy"
 	sammyOutputPath = path.join output.vendor, "sammy"
 	mkdirp sammyOutputPath, () ->
-		copyFile (path.join sammyInputPath, "sammy.js"), (path.join sammyOutputPath, "sammy.js"), () ->
+		copyFile (path.join sammyInputPath, "sammy-0.7.2.js"), (path.join sammyOutputPath, "sammy.js"), () ->
 			cont?()
 
 copyHtml = (options, cont) ->
