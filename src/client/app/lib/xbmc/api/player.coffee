@@ -41,7 +41,7 @@ define [
 		# @see http://wiki.xbmc.org/index.php?title=JSON-RPC_API/v6#Player.GetItem
 		#
 		# @var Player.Id playerid
-		# @var [ List.Fields.All properties ]
+		# @var [ List.Fields.All properties[] ]
 		# @var object | function callback
 		# @var [ object context ] The context to bind 'this' to in the callback
 		# @callback { List.Item.All item }
@@ -49,6 +49,12 @@ define [
 		###
 		GetItem: (options) ->
 			method = "#{@_API}.GetItem"
+			@client.send
+				method: method
+				params:
+					playerid: options.playerid
+					properties: options.properties
+			, options.callback, options.context
 			return @
 
 		###
@@ -122,6 +128,12 @@ define [
 		###
 		Open: (options) ->
 			method = "#{@_API}.Open"
+			@client.send
+				method: method
+				params:
+					item: options.item
+					options: options.options
+			, options.callback, options.context
 			return @
 
 		###
@@ -138,11 +150,11 @@ define [
 		###
 		PlayPause: (options) ->
 			method = "#{@_API}.PlayPause"
-			playerid = if options.playerid? then options.playerid else 1
 			@client.send
 				method: method
 				params:
-					playerid: playerid
+					play: options.play
+					playerid: options.playerid
 			, options.callback, options.context
 			return @
 

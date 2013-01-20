@@ -133,7 +133,7 @@ define [
 							clearTimeout rc
 						else
 							@connect()
-							console?.log "Connection closed trying to reconnect in 5 seconds"
+							console?.info "Connection closed trying to reconnect in 5 seconds"
 					, 5000
 			return @
 
