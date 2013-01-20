@@ -30,7 +30,7 @@ define [
 		_ws = null
 		
 		###
-		# @var ko.observable | null
+		# @param ko.observable | null
 		###
 		_connected = null
 
@@ -53,8 +53,8 @@ define [
 
 		###
 		# Run the a callback queue.
-		# @var array callbacks
-		# @var object msg
+		# @param array callbacks
+		# @param object msg
 		###
 		_runCallbacks = (callbacks, msg) ->
 			for cbObj in callbacks
@@ -73,9 +73,9 @@ define [
 
 		###
 		# Constructs a xbmc websocket client.
-		# @var string host
-		# @var string port
-		# @var string protocol
+		# @param string host
+		# @param string port
+		# @param string protocol
 		###
 		constructor: (host, port, protocol) ->
 			return @ if _ws?
@@ -115,7 +115,7 @@ define [
 
 		###
 		# Handling response from server.
-		# @var WebSocket ws
+		# @param WebSocket ws
 		# @return void
 		###
 		recieve: (ws) =>
@@ -125,7 +125,7 @@ define [
 
 		###
 		# Handling success response from server.
-		# @var object msg
+		# @param object msg
 		# @return void
 		###
 		success: (msg) ->
@@ -146,7 +146,7 @@ define [
 
 		###
 		# Handling error response from the server.
-		# @var object msg
+		# @param object msg
 		# @return void
 		###
 		error: (msg) ->
@@ -160,9 +160,9 @@ define [
 
 		###
 		# Send message to the xbmc server.
-		# @var object msg
-		# @var object | function callback success, error
-		# @var object context
+		# @param object msg
+		# @param object | function callback success, error
+		# @param object context
 		# @return void
 		###
 		send: (msg, callback, context) ->
@@ -202,9 +202,9 @@ define [
 
 		###
 		# Bind a callback to a notification.
-		# @var string event Event is a prefix of the JSONRPC notification methods.
-		# @var function callback(msg)
-		# @var object context
+		# @param string event Event is a prefix of the JSONRPC notification methods.
+		# @param function callback(msg)
+		# @param object context
 		# @return void
 		###
 		bind: (event, callback, context) ->
@@ -215,8 +215,8 @@ define [
 		
 		###
 		# Unbind a callback from an event.
-		# @var string event
-		# @var Funcion callback
+		# @param string event
+		# @param Funcion callback
 		###
 		unbind: (event, callback) ->
 			throw new Error "Event and callback have to be provided" if not callback? and not event?
@@ -233,7 +233,7 @@ define [
 		###
 		# Unbind all notifications.
 		# If no event specified, then unbind all callbacks. 
-		# @var string event
+		# @param string event
 		# @return void
 		###
 		unbindAll: (event) ->
