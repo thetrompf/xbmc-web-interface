@@ -4,33 +4,56 @@ define [
 	"knockout"
 	"xbmc/base/client"
 ], ($, _, ko, ClientBase) ->
+
+	###
+	# The actual WSClient.
+	# @extends ClientBase
+	###
 	class _WSClient extends ClientBase
 
-		# request status'
+		###
+		# Request status'
+		# @const CREATED The request callback created state, the callback has been created, but the request has not yet been made.
+		# @const SENT The request has now been made, and now waits for the server to answer, so we can execute the callback.
+		###
 		CREATED = 0
 		SENT = 1
 
-		# server info
+		###
+		# Server info.
+		# @var string | null The websocket host.
+		# @var integer | string | null The connection port.
+		###
 		_host = null
 		_port = null
 
-		# request queue
+		###
+		# @var object The request callback queue.
+		###
 		_queue = {}
 
-		# notification event queue
+		###
+		# @var object The notification events subscription queue.
+		###
 		_events = {}
 
-		# request identifier prefix
+		###
+		# @var string The request identifier prefix.
+		###
 		_prexix = "xbmc-web-interface-"
 		
-		# request sequencer.
+		###
+		# @var integer The request identifier sequencer.
+		###
 		_id = 0
 
-		# the websocket.
+		###
+		# @var WebSocket | null The websocket.
+		###
 		_ws = null
 		
 		###
-		# @param ko.observable | null
+		# @var ko.observable | null
 		###
 		_connected = null
 
@@ -66,7 +89,7 @@ define [
 
 		###
 		# Whether or not the web socket is connected.
-		# @return Boolean
+		# @return boolean
 		###
 		isConnected: () ->
 			return _connected()
@@ -75,7 +98,8 @@ define [
 		# Constructs a xbmc websocket client.
 		# @param string host
 		# @param string port
-		# @param string protocol
+		# @param [ string protocol ]
+		# @return ClientBase
 		###
 		constructor: (host, port, protocol) ->
 			return @ if _ws?
@@ -92,7 +116,7 @@ define [
 
 		###
 		# Connect if not connected.
-		# @return WSClient
+		# @return ClientBase
 		###
 		connect: () ->
 			unless @isConnected()
@@ -115,7 +139,7 @@ define [
 
 		###
 		# Handling response from server.
-		# @param WebSocket ws
+		# @param _WSClient ws
 		# @return void
 		###
 		recieve: (ws) =>
@@ -162,7 +186,7 @@ define [
 		# Send message to the xbmc server.
 		# @param object msg
 		# @param object | function callback success, error
-		# @param object context
+		# @param [ object context ]
 		# @return void
 		###
 		send: (msg, callback, context) ->
@@ -205,7 +229,7 @@ define [
 		# @param string event Event is a prefix of the JSONRPC notification methods.
 		# @param function callback(msg)
 		# @param object context
-		# @return void
+		# @return ClientBase
 		###
 		bind: (event, callback, context) ->
 			throw new Error "At least event and callback has to be provided" unless callback? and event?
@@ -217,6 +241,7 @@ define [
 		# Unbind a callback from an event.
 		# @param string event
 		# @param Funcion callback
+		# @return ClientBase
 		###
 		unbind: (event, callback) ->
 			throw new Error "Event and callback have to be provided" if not callback? and not event?
@@ -233,20 +258,35 @@ define [
 		###
 		# Unbind all notifications.
 		# If no event specified, then unbind all callbacks. 
-		# @param string event
-		# @return void
+		# @param [ string event ]
+		# @return ClientBase
 		###
 		unbindAll: (event) ->
 			_events = {} unless event?
 			delete _events[event] if _events[event]?
 			return @
 
+	###
+	# Proxy object, used for singleton creation of the _WSClient.
+	###
 	class WSClient
+		
+		###
+		# @var _WSClient | null Holds the instance of the exiting connection.
+		###
 		_instance = null
+
+		###
+		# Creates a client, or returns an existing one if any.
+		# @param [ string host="localhost" ] The hostname or IP.
+		# @param [ string | integer port=9090 ] The network port, to connect to.
+		# @param [ string protocol=null ] The protocol to connect to. NB! It is ignored in this client.
+		# @return _WSClient
+		###
 		@get = (host, port, protocol) ->
-			console.warn "Protocol choice has been ignored, ws:// is the only supported protocal by this client" if protocal?
+			console.warn "Protocol choice has been ignored, ws:// is the only supported protocal by this client" if protocol?
 			host = "localhost" unless host?
-			port = "9090" unless port?
+			port = 9090 unless port?
 			return _instance if _instance?
 			return _instance = (new _WSClient host, port, protocol).connect()
 
