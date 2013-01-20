@@ -8,12 +8,14 @@ define [
 	class PlayerViewModel extends ViewModelBase
 
 		bindingContext: "#player-container"
+		$el: "#player-container"
 		template: template
 		template = null
 
 		properties: () ->
 			playerid: @observable -1
 			isPlaying: @observable no
+			currentTitle: @observable ""
 
 		computedProperties: () ->
 			playButtonContent: @computed () ->
@@ -27,10 +29,13 @@ define [
 				callback: (data) -> return
 				playerid: @playerid()
 
-		toggleStop: () ->
+		stop: () ->
 			@player.Stop
 				callback: (data) -> return
 				playerid: @playerid()
+
+		forward: () ->
+
 
 		initialize: (options) ->
 			@client = WSClient.get()
@@ -45,7 +50,9 @@ define [
 				playerid: @playerid()
 				properties: [ "speed" ]
 				callback: (data) ->
-					@isPlaying yes if data.speed > 0
+					if data.speed > 0
+						@isPlaying yes
+					@getItemInfo()
 				context: @
 
 		initPlayer: () ->
@@ -59,14 +66,34 @@ define [
 						console.error "An error occured when retreiving active players"
 				context: @
 
+		getItemInfo: () ->
+			@player.GetItem
+				playerid: @playerid()
+				properties: [
+					"title"
+					"season"
+					"episode"
+					"plot"
+					"runtime"
+					"showtitle"
+					"thumbnail"
+				]
+				callback:
+					success: (data) ->
+						@currentTitle data.item.title
+					error: (data) -> debugger
+				context: @
+
 		initEventListiners: () ->
 			@player.bind "OnPlay", (data) ->
 				@playerid data.player.playerid
 				@isPlaying yes
+				@getItemInfo()
 			, @
 			@player.bind "OnStop", (data) ->
 				@playerid -1
 				@isPlaying no
+				@currentTitle ""
 			, @
 			@player.bind "OnPause", (data) ->
 				@isPlaying no

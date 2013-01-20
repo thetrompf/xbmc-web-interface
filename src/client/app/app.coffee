@@ -3,8 +3,9 @@ define [
 	"base/router"
 	"app/routes"
 	"base/viewmodel"
+	"app/remote/viewmodel"
 	"app/player/viewmodel"
-], (_, Router, routes, ViewModelBase, PlayerViewModel) ->
+], (_, Router, routes, ViewModelBase, RemoteViewModel, PlayerViewModel) ->
 	class TopmenuViewModel extends ViewModelBase
 
 		# autoRender is false, because the view is already in the DOM
@@ -27,9 +28,6 @@ define [
 			,
 				link: "/music"
 				label: "Music"
-			,
-				link: "/remote"
-				label: "Remote"
 			,
 				link: "/settings"
 				label: "Settings"
@@ -80,13 +78,15 @@ define [
 
 		_(@.prototype).extend Router.prototype
 		topmenu: null
+		remote: null
 
 		constructor: (args) ->
 			@topmenu = new TopmenuViewModel url: @url
-			options =
+			options = 
 				url: @url
 				search: @topmenu.search
 				searchDelayed: @topmenu.searchDelayed
 				searchPlaceholder: @topmenu.searchPlaceholder
+			@remote = new RemoteViewModel options
 			@player = new PlayerViewModel options
 			@initRouter routes, options

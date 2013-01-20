@@ -1,9 +1,27 @@
 @import "bootstrap/bootstrap.less";
 
 body {
-	padding-top: 40px;
+}
+
+html, body {
+	height: 100%;
 }
 
 #navbar-search {
 	line-height: normal; // fixes the placeholder "dancing"!
+}
+
+#main-container {
+	margin-top: 40px;
+}
+
+#remote-container {
+	height: 100%;
+	right: 0px;
+	position: absolute;
+	width: 250px;
+
+	#remote-flyout-container {
+		position: relative;
+	}
 }

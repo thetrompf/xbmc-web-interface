@@ -23,7 +23,7 @@ This is movies template
 			</tr>
 		</thead>
 		<tbody data-bind="foreach: movies">
-			<tr>
+			<tr data-bind="click: $root.chooseMovie">
 				<td data-bind="text: movieid"></td>
 				<td data-bind="text: title"></td>
 				<td data-bind="text: sorttitle"></td>

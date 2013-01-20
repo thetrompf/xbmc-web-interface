@@ -1,19 +1,24 @@
 define [
 	"base/viewmodel"
+	"xbmc/clients/wsclient"
+	"xbmc/api/input"
 	"text!app/remote/templates/remote.html"
-], (ViewModel, template) ->
+], (ViewModel, WSClient, Input, template) ->
 	class RemoteViewModel extends ViewModel
 
-		bindingContext: "#main-container"
+		bindingContext: "#remote-container"
+		$el: "#remote-container"
 		template: template
 		template = null
 
-		properties: (options) ->
-			options.searchPlaceholder "Search remote..."
-			title: @observable "Remote"
+		client: null
+		input: null
 
-		subscriptions: (options) ->
-			searchDelayed: @subscribe(options.searchDelayed, (newValue) ->
-				if newValue.length > 3
-					console.log "Search remote: #{newValue}"
-			)
+		properties: (options) ->
+			url: options.url
+
+		initialize: (options) ->
+			@client = WSClient.get()
+			@input = new Input @client
+
+		afterInitialize: (options) ->

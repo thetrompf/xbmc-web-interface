@@ -2,9 +2,9 @@ define [
 	"base/viewmodel"
 	"text!app/movies/templates/movies.html"
 	"xbmc/clients/wsclient"
-	"xbmc/api/videolibrary"
 	"xbmc/api/player"
-], (ViewModel, template, WSClient, VideoLibrary, Player) ->
+	"xbmc/api/videolibrary"
+], (ViewModel, template, WSClient, Player, VideoLibrary) ->
 	class MoviesViewModel extends ViewModel
 
 		bindingContext: "#main-container"
@@ -13,6 +13,7 @@ define [
 		template = null
 		client: null
 		videolibrary: null
+		self = null
 
 		moreMovies: () ->
 			if @moviesLeft()
@@ -22,7 +23,7 @@ define [
 							msg.limits.start = msg.limits.end
 							msg.limits.end += @moviesPerPage unless msg.limits.end is msg.limits.total
 							@movieLimits msg.limits
-							@movies @_.union @movies(), msg.movies
+							@movies @_.union @movies(), msg.movies if msg.movies
 						error: (msg) ->
 							debugger
 					limits: @movieLimits()
@@ -35,6 +36,16 @@ define [
 				end: @moviesPerPage
 				total: -1
 
+		chooseMovie: () ->
+			self.player.Open
+				callback:
+					success: (msg) ->
+					error: (msg) => console.error "Failed to play movieid: #{@movieid}", msg
+				item:
+					movieid: @movieid
+				options:
+					resume: true
+
 		properties: (options) ->
 			options.searchPlaceholder "Search movies..."
 			title: @observable "Movies"
@@ -44,6 +55,7 @@ define [
 				end: 100
 				total: -1
 			moviesPerPage: 100
+			player: options.player
 
 		computedProperties: (options) ->
 			moviesLeft: @computed () ->
@@ -59,6 +71,7 @@ define [
 			)
 
 		initialize: (options) ->
+			self = @
 			@client = new WSClient.get "localhost", 9090
 			@videolibrary = new VideoLibrary @client
 			@player = new Player @client
