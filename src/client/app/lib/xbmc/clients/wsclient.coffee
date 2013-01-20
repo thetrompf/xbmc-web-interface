@@ -102,7 +102,7 @@ define [
 					console?.error "The websocket came back with an error", msg
 				_ws.onopen = (msg) ->
 					_connected yes
-				_ws.onclose = (msg) ->
+				_ws.onclose = (msg) =>
 					_connected no
 					setTimeout () =>
 						@connect()
