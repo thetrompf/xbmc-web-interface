@@ -104,9 +104,12 @@ define [
 					_connected yes
 				_ws.onclose = (msg) =>
 					_connected no
-					setTimeout () =>
-						@connect()
-						console?.log "Connection closed trying to reconnect in 5 seconds"
+					rc = setTimeout () =>
+						if _connected()
+							clearTimeout rc
+						else
+							@connect()
+							console?.log "Connection closed trying to reconnect in 5 seconds"
 					, 5000
 			return @
 
