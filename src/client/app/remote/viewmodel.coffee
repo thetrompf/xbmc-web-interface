@@ -18,7 +18,6 @@ define [
 			url: options.url
 
 		initialize: (options) ->
-			@client = WSClient.get()
-			@input = new Input @client
+			@input = new Input options.client
 
 		afterInitialize: (options) ->
