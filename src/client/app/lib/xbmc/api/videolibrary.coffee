@@ -5,10 +5,10 @@ define [
 	# @see http://wiki.xbmc.org/index.php?title=JSON-RPC_API/v6#VideoLibrary
 	###
 	class VideoLibrary extends APIBase
-		
+
 		###
 		#	@see http://wiki.xbmc.org/index.php?title=JSON-RPC_API/v6#VideoLibrary_2
-		###		
+		###
 		events: [
 			"OnCleanFinished"
 			"OnCleanStarted"
@@ -115,6 +115,10 @@ define [
 		###
 		GetMovieDetails: (options) ->
 			method = "#{@_API}.GetMovieDetails"
+			@client.send
+				method: method
+				params: options.params
+			, options.callback, options.context
 			return @
 
 		###
@@ -170,6 +174,10 @@ define [
 		###
 		GetMovies: (options) ->
 			method = "#{@_API}.GetMovies"
+			@client.send
+				method: method
+				params: options.params
+			, options.callback, options.context
 			return @
 
 		###
@@ -533,5 +541,5 @@ define [
 				method: "VideoLibrary.GetMovies"
 				params:
 					limits: limits
-					properties: [ "title", "year", "sorttitle", "originaltitle" ]
+					properties: [ "title", "year", "originaltitle", "thumbnail" ]
 			, options.callback, options.context
