@@ -1,22 +1,11 @@
-<div class="row-fluid">
-
-	<div class="alert alert-success" data-bind="visible: subpageAlert">
-		<button type="button" class="close" data-bind="click: removeAlert">&times;</button>
-		<strong>Success!</strong> We have successfully redirected the page to a subpage without the viewmodel got disposed.
+<div id="home-glass-overlay">
+	<div class="logo"></div>
+	<div class="menu-container">
+		<ul class="menu">
+			<li><a href="/movies">Movies</a></li>
+			<li><a href="/tvshows">TV Shows</a></li>
+			<li><a href="/music">Music</a></li>
+			<li><a href="/settings">Settings</a></li>
+		</ul>
 	</div>
-
-	<ul data-bind="foreach: names">
-		<li><span data-bind="text: name"></span> <a href="#" data-bind="click: $parent.removeHandler">&times;</a></li>
-	</ul>
-	<form class="form-inline" data-bind="submit: addHandler">
-		<input type="text" data-bind="value: name, valueUpdate: 'afterkeydown'" />
-		<button class="btn">Add</button>
-	</form>
-	<span data-bind="visible: shortName() != true">Long name</span>
-	<span data-bind="visible: shortName">Short name</span>
-	<br />
-	<a href="/home/subpage">Subpage</a>
-
-	<div id="inner-viewmodel-test"></div>
-
 </div>

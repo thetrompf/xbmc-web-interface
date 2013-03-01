@@ -1,92 +1,43 @@
 define [
 	"underscore"
+	"base/viewmodel"
 	"base/router"
 	"app/routes"
-	"base/viewmodel"
-	"app/remote/viewmodel"
-	"app/player/viewmodel"
-], (_, Router, routes, ViewModelBase, RemoteViewModel, PlayerViewModel) ->
-	class TopmenuViewModel extends ViewModelBase
+	"app/config"
+	"xbmc/clients/wsclient"
+	"xbmc/api/gui"
+	"date/format"
+], (_, ViewModelBase, Router, routes, config, WSClient, GUI) ->
 
-		# autoRender is false, because the view is already in the DOM
-		# which is why $el is a string, that describes a selector matching the root element of the view
-		autoRender: false
-		$el: "#topmenu"
-		bindingContext: "#topmenu"
+	class Global extends ViewModelBase
+		bindingContext: "#global-system"
+		template: ""
+		dateInterval = null
 
-		properties: (options) ->
-			menu: @observable [
-				link: "/home"
-				label: "Home"
-				exact: ["/"]
-			,
-				link: "/movies"
-				label: "Movies"
-			,
-				link: "/tvshows"
-				label: "TV Shows"
-			,
-				link: "/music"
-				label: "Music"
-			,
-				link: "/settings"
-				label: "Settings"
-			]
-			search: @observable ""
-			searchPlaceholder: @observable ""
-			url: options.url
+		properties: () ->
+			date: @observable new Date
+			weather: @observable "8&deg;C"
 
-		computedProperties: (options) ->
-			self = @
-			searchDelayed: (@computed self.search).extend (throttle: 300)
+		computedProperties: () ->
+			formatedDate: @computed () =>
+				f = @date().format config.i18n.longDateFormat, config.i18n.utc
+				return f
 
-		startsWith: (str, starts) ->
-			return true if starts is ''
-			return false unless str? or starts? 
-			str = String str
-			starts = String starts
-			return str.length >= starts.length and (str.slice 0, starts.length) is starts
-
-		afterInitialize: (options) ->
-			@initMenu @menu()
-			@applyBindings()
-			@initEventHandlers()
-
-		initEventHandlers: () ->
-			@$("#navbar-search-form").submit (e) =>
-				e.preventDefault()
-				e.stopPropagation()
-				return false
-
-		initMenu: (menu) ->
-			that = @
-			for entry in menu
-				entry.active = @computed () ->
-					return false unless (url = that.url())?
-					url = "/#{url}" unless url[0] is "/"
-					return true if that.startsWith url, @link
-					if _.isArray @match
-						for m in @match
-							return true if that.startsWith url, m
-					if _.isArray @exact
-						for e in @exact
-							return true if url is e
-					return false
-				, entry
+		afterInitialize: () ->
+			dateInterval = setInterval () =>
+				@date new Date
+			, 10000
 
 	class Application
 
 		_(@.prototype).extend Router.prototype
-		topmenu: null
-		remote: null
 
 		constructor: (args) ->
-			@topmenu = new TopmenuViewModel url: @url
-			options = 
+			@client = @client = WSClient.get config.jsonrpc.host, config.jsonrpc.port
+			options =
 				url: @url
-				search: @topmenu.search
-				searchDelayed: @topmenu.searchDelayed
-				searchPlaceholder: @topmenu.searchPlaceholder
-			@remote = new RemoteViewModel options
-			@player = new PlayerViewModel options
+				client: @client
+				global: @global
+				config: config
+			@global = new Global options
 			@initRouter routes, options
