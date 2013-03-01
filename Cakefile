@@ -92,69 +92,30 @@ createDirs = (cont) ->
 
 copyDeps = (options, cont) ->
 	console.log "Copying dependcies..."
-	copyjQuery options, () ->
-		copyRequireJs options, () ->
-			copyKnockoutJs options, () ->
-				copyBootstrapJs options, () ->
-					copyUnderscoreJs options, () ->
-						copySammyJs options, () ->
-							cont?()
+	inputIndex = path.join input.vendor
+	outputIndex = path.join output.vendor
 
-copyjQuery = (options, cont) ->
-	console.log "Copying jQuery..."
-	jqueryInputPath = path.join input.vendor, "jquery"
-	jqueryOutputPath = path.join output.vendor, "jquery"
-	mkdirp jqueryOutputPath, () ->
-		copyFile (path.join jqueryInputPath, "jquery-1.9.0.js"), (path.join jqueryOutputPath, "jquery.js"), () ->
-			cont?()
-
-copyKnockoutJs = (options, cont) ->
-	console.log "Copying knockout.js..."
-	knockoutInputPath = path.join input.vendor, "knockout"
-	knockoutOutputPath = path.join output.vendor, "knockout"
-	mkdirp knockoutOutputPath, () ->
-		copyFile (path.join knockoutInputPath, "knockout-2.2.0.js"), (path.join knockoutOutputPath, "knockout.js"), () ->
-			cont?()
-
-copyRequireJs = (options, cont) ->
-	console.log "Copying require.js..."
-	requireInputPath = path.join input.vendor, "require"
-	requireOutputPath = path.join output.vendor, "require"
-	mkdirp requireOutputPath
-	copyFile (path.join requireInputPath, "require-2.1.2.js"), (path.join requireOutputPath, "require.js"), () ->
-		copyFile (path.join requireInputPath, "require.text-2.0.3.js"), (path.join requireOutputPath, "require.text.js"), () ->
-			cont?()
-
-copyBootstrapJs = (options, cont) ->
-	console.log "Copying bootstrap.js..."
-	bootstrapInputPath = path.join input.vendor, "bootstrap"
-	bootstrapOutputPath = path.join output.vendor, "bootstrap"
-	mkdirp bootstrapOutputPath, () ->
-		fs.readdir bootstrapInputPath, (err, files) ->
+	mkdirp outputIndex, () ->
+		fs.find inputIndex, "js", (err, files) ->
+			return cont?() if err?
 			i = 0
 			(next = (cont) ->
-				console.log
-				file = files[i++]
-				return cont?() unless file?
-				copyFile (path.join bootstrapInputPath, file), (path.join bootstrapOutputPath, file), () ->
-					next(cont)
+				filePath = files[i++]
+				return cont?() unless filePath?
+
+				cp = () ->
+					file = path.basename filePath
+					copyFile filePath, (path.join outputIndex, dir, file), () ->
+						next(cont)
+
+				dir = (path.dirname filePath).substring (inputIndex.length + 1)
+				if dir isnt ""
+					mkdirp (path.join outputIndex, dir), () ->
+						cp()
+				else
+					cp()
+
 			)(cont)
-
-copyUnderscoreJs = (options, cont) ->
-	console.log "Copying underscore.js..."
-	underscoreInputPath = path.join input.vendor, "underscore"
-	underscoreOutputPath = path.join output.vendor, "underscore"
-	mkdirp underscoreOutputPath, () ->
-		copyFile (path.join underscoreInputPath, "underscore-1.4.3.js"), (path.join underscoreOutputPath, "underscore.js"), () ->
-			cont?()
-
-copySammyJs = (options, cont) ->
-	console.log "Copying sammy.js"
-	sammyInputPath = path.join input.vendor, "sammy"
-	sammyOutputPath = path.join output.vendor, "sammy"
-	mkdirp sammyOutputPath, () ->
-		copyFile (path.join sammyInputPath, "sammy-0.7.2.js"), (path.join sammyOutputPath, "sammy.js"), () ->
-			cont?()
 
 copyHtml = (options, cont) ->
 	console.log "Copying templates..."
@@ -163,7 +124,7 @@ copyHtml = (options, cont) ->
 
 	mkdirp outputIndex, () ->
 		copyFile (path.join inputIndex, "index.html"), (path.join outputIndex, "index.html"), () ->
-		
+
 			fs.find inputIndex, "html", (err, files) ->
 				return cont?() if err?
 				i = 0
@@ -177,12 +138,12 @@ copyHtml = (options, cont) ->
 							next(cont)
 
 					dir = (path.dirname filePath).substring (inputIndex.length + 1)
-					if dir isnt ""			
+					if dir isnt ""
 						mkdirp (path.join outputIndex, dir), () ->
 							cp()
 					else
 						cp()
-				
+
 				)(cont)
 
 compileLess = (options, cont) ->
@@ -214,10 +175,13 @@ buildClient = (options, cont) ->
 		exec "coffee --compile --bare --output #{output.base} #{input.base}", (error, stdout, stderr) ->
 			console.log stderr if stderr
 			console.log error if error?
-			compileLess options, () ->
-				copyingImages options, () ->
-					copyHtml options, () ->
-						cont?()
+			exec "coffee --compile --bare --output #{output.vendor} #{input.vendor}", (error, stdout, stderr) ->
+				console.log stderr if stderr
+				console.log error if error?
+				compileLess options, () ->
+					copyingImages options, () ->
+						copyHtml options, () ->
+							cont?()
 
 buildApp = (options, cont) ->
 	buildServer options, () ->
