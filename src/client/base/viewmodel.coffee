@@ -3,18 +3,21 @@ define [
 	"underscore"
 	"knockout"
 ], ($, _, ko, Router) ->
+
+	uid = 0
+
 	###
 	# Used as a binding context.
 	# Delivers base functionality for a ViewModel.
 	# Can be used with and without a template.
 	# @uses jQuery | _ | ko | Router
 	###
-	class ViewModelBase
-		
+	class ViewModel
+
 		#####################
 		# _for internal use #
 		#####################
-		
+
 		###
 		# The user defined render function
 		# @var Function | null
@@ -44,7 +47,7 @@ define [
 		# @var Array<String>
 		###
 		_DOMAttachMethods: ['append', 'prepend']
-		
+
 		###
 		# Holds the viewModels attach from here.
 		# these should be disposed when this is view model is disposed.
@@ -58,6 +61,12 @@ define [
 		# @var Object<String, ko.subscriptions> | null
 		###
 		_subscriptions: null
+
+		###
+		# Holds the unique id of the view model, instanciated upon construction.
+		# @var String | null
+		###
+		_uid: null
 
 		#############
 		# Utilities #
@@ -80,7 +89,7 @@ define [
 		# @var ko
 		###
 		ko: ko
-		
+
 		###############################
 		# ViewModel control variables #
 		###############################
@@ -124,7 +133,7 @@ define [
 
 		###
 		# The DOM node to apply this ViewModel bindings on.
-		# @see resolveContext 
+		# @see resolveContext
 		#
 		# * String - CSS selector
 		# * DOMNode
@@ -157,14 +166,14 @@ define [
 		# @var Boolean
 		###
 		alwaysDispose: no
-		
+
 		###
 		# When using templates you can deside, whether to wrap the template in an element
 		# if yes, then you can deside which element you want to wrap the template in
 		# @var Boolean
 		###
 		wrapTemplate: no
-		
+
 		###
 		# A tag name to create a dom node from.
 		# NB! This is only used when wrapTemplate is enabled.
@@ -178,6 +187,13 @@ define [
 		# @var String | null
 		###
 		className: null
+
+		###
+		# A string id to add to the wrapped element.
+		# NB! This is only used when wrapTemplate is enabled.
+		# @var String | null
+		###
+		id: null
 
 		########################
 		# Reference variableds #
@@ -263,10 +279,13 @@ define [
 		# @return void
 		###
 		constructor: (@options) ->
-
 			# saving reference.
 			_self = @
 
+			# initializing the viewmodel's unique id.
+			@_uid = "vm#{uid++}"
+
+			# intializing sub-viewmodels-map.
 			@_viewModels = []
 
 			# initializing observable @disposed property.
@@ -283,7 +302,7 @@ define [
 			@_.extend @, @computedProperties arguments...
 			@_subscriptions = @subscriptions arguments...
 			@_.extend @, @_subscriptions
-			
+
 			# setting up observable of automatic callback calling when view is inserted into DOM
 			@computed () ->
 				if _self._isAddedToDOM() is yes
@@ -309,6 +328,7 @@ define [
 				if _self.wrapTemplate
 					_self.$el = _self.$ "<#{@tagName} />"
 					_self.$el.addClass _self.className if _self.className?
+					_self.$el.attr 'id', _self.id if _self.id?
 					_self.el = _self.$el.get 0
 				else if _self.template?
 					# This only works if the template only has one root element.
@@ -399,6 +419,26 @@ define [
 			@ko.applyBindings @, $bindingContext.get 0
 			@_isBindingsApplied yes
 
+		###
+		# Applies the viewmodel's uid to the events as namespace.
+		# @var Object | String events
+		# @return Object | String
+		###
+		applyViewModelIdToEvents: (events) ->
+			if _.isString events
+				return "#{events}.#{@_uid}" unless events.indexOf "." > -1 # if the event already contain a namespace do nothing.
+				return events
+			else if _.isObject
+				res = {}
+				_.map events, (key, value) =>
+					if events.indexOf "." > -1
+						res["#{events}.#{@_uid}"] = value
+					else
+						res[events] = value
+				return res
+			else
+				throw new Error "Unsupport event type: #{typeof events}"
+
 		#################
 		# ViewModel API #
 		#################
@@ -425,7 +465,7 @@ define [
 		# @throws Error if calling render when no template is defined.
 		###
 		render: () ->
-		
+
 		###
 		# Called when inserted to the DOM.
 		# @return void
@@ -445,6 +485,29 @@ define [
 		# @return Funciton That evaluates to a string with the context resolved.
 		###
 		compile: (html) -> (context) -> html
+
+		###
+		# Subscribe to an event, proxy to jQuery.on, except for some home-cooking event namespacing
+		# added to it, events subscribe through here, are automatically unsubscribed upon disposal.
+		# @param Object | String events
+		# @param [ String selector ]
+		# @param [ Anything data ]
+		# @param Function handler(event)
+		# @return jQuery
+		###
+		on: (events, selector, data, handler) ->
+			@$el.on (@applyViewModelIdToEvents events), selector, data, handler
+
+		###
+		# Unsubscribe to an event, proxy to jQuery.off, except for some home-cooking event namespacing
+		# added to it.
+		# @param Object | String events
+		# @param String selector
+		# @param [ Function handler(event) ]
+		# @return jQuery
+		###
+		off: (events, selector, handler) ->
+			@$el.off (@applyViewModelIdToEvents events), selector, handler
 
 		###
 		# Makes this viewmodel aware of another viewmodel to dispose, when this one gets disposed.
