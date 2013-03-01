@@ -1,10 +1,11 @@
 define [
 	"base/viewmodel"
-	"xbmc/clients/wsclient"
 	"xbmc/api/player"
+	"xbmc/api/util"
 	"text!app/player/player.html"
-], (ViewModelBase, WSClient, Player, template) ->
-	
+	"app/config"
+], (ViewModelBase, Player, Util, template, config) ->
+
 	class PlayerViewModel extends ViewModelBase
 
 		bindingContext: "#player-container"
@@ -16,6 +17,7 @@ define [
 			playerid: @observable -1
 			isPlaying: @observable no
 			currentTitle: @observable ""
+			thumbnail: @observable ""
 
 		computedProperties: () ->
 			playButtonContent: @computed () ->
@@ -38,8 +40,7 @@ define [
 
 
 		initialize: (options) ->
-			@client = WSClient.get()
-			@player = new Player @client
+			@player = new Player options.client
 
 		afterInitialize: (options) ->
 			@initPlayer()
@@ -77,12 +78,30 @@ define [
 					"runtime"
 					"showtitle"
 					"thumbnail"
+					"starttime"
+					"endtime"
 				]
 				callback:
 					success: (data) ->
-						@currentTitle data.item.title
+						if data.item.type is "episode"
+							@currentTitle @formatTVShowTitle data.item
+						else
+							@currentTitle data.item.title
+						@thumbnail Util.parseImageResource data.item.thumbnail, config.resources, "w92"
 					error: (data) -> debugger
 				context: @
+
+		formatTVShowTitle: (item) ->
+			"#{item.showtitle} #{@formatSeasonInfo item} #{item.title}"
+
+		formatSeasonInfo: (item) ->
+			res = "S"
+			if item.season.toString().length is 1
+				res += 0
+			res += item.season+"E"
+			if item.episode.toString().length is 1
+				res += 0
+			res += item.episode
 
 		initEventListiners: () ->
 			@player.bind "OnPlay", (data) ->

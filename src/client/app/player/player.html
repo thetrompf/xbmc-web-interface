@@ -1,4 +1,4 @@
-<div class="navbar-inner">
+<div class="navbar-inner" id="xbmc-player">
 	<div class="container-fluid">
 		<ul class="nav">
 			<li>
@@ -7,6 +7,9 @@
 					<button class="btn btn-small" data-bind="click: stop, disable: playerid() < 0"><icon class="icon-stop"></icon></button>
 					<button class="btn btn-small" data-bind="click: forward"><icon class="icon-chevron-right"></icon></button>
 				</div>
+			</li>
+			<li>
+				<img data-bind="attr: { src: thumbnail }" alt="" />
 			</li>
 			<li>
 				<a href="javascript:false" data-bind="text: currentTitle"></a>
