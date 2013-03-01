@@ -544,4 +544,5 @@ define [
 			for key of @_subscriptions
 				@_subscriptions[key].dispose()
 			@$el?.remove()
+			@off ".#{@_uid}"
 			@disposed true

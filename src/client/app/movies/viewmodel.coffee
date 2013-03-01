@@ -174,5 +174,5 @@ define [
 				context: @
 
 		dispose: () ->
-			@$(document).off "movies"
+			@$(document).off ".movies"
 			super
