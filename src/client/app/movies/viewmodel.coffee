@@ -1,82 +1,173 @@
 define [
+	"underscore"
 	"base/viewmodel"
 	"text!app/movies/templates/movies.html"
-	"xbmc/clients/wsclient"
-	"xbmc/api/player"
 	"xbmc/api/videolibrary"
-], (ViewModel, template, WSClient, Player, VideoLibrary) ->
+	"xbmc/api/util"
+	"app/config"
+	"vendor/nanoscroller/jquery.nanoscroller"
+], (_, ViewModel, template, VideoLibrary, Util, config) ->
 	class MoviesViewModel extends ViewModel
 
+		ENTER = 13
+		ESC   = 27
+		PGUP  = 33
+		PGDN  = 34
+		END   = 35
+		HOME  = 36
+		LEFT  = 37
+		UP    = 38
+		RIGHT = 39
+		DOWN  = 40
+
+		SCROLLPAGE = 10
+
 		bindingContext: "#main-container"
-		wrapTemplate: true
-		template: template
-		template = null
-		client: null
-		videolibrary: null
-		self = null
+		template      : template
+		template      = null
+		self          = null
+		videoLibrary  = null
 
-		moreMovies: () ->
-			if @moviesLeft()
-				@videolibrary.getMovieList
-					callback:
-						success: (msg) ->
-							msg.limits.start = msg.limits.end
-							msg.limits.end += @moviesPerPage unless msg.limits.end is msg.limits.total
-							@movieLimits msg.limits
-							@movies @_.union @movies(), msg.movies if msg.movies
-						error: (msg) ->
-							debugger
-					limits: @movieLimits()
-					context: @
-
-		resetMovies: () ->
-			@movies []
-			@movieLimits
-				start: 0
-				end: @moviesPerPage
-				total: -1
-
-		chooseMovie: () ->
-			self.player.Open
+		afterInitialize: (opts) ->
+			super
+			self = @
+			@videoLibrary = new VideoLibrary opts.client
+			@videoLibrary.GetMovies
+				params:
+					properties: [
+						"title"
+						"rating"
+					]
 				callback:
 					success: (msg) ->
-					error: (msg) => console.error "Failed to play movieid: #{@movieid}", msg
-				item:
-					movieid: @movieid
-				options:
-					resume: true
+						return if @disposed()
+						_.map msg.movies, (e) =>
+							e.selected = @observable false
+							e.rating = e.rating.toFixed 2
+							return e
+						@movies msg.movies
+						@initEventHandlers()
+					error: (err) -> debugger
+				context: @
 
-		properties: (options) ->
-			options.searchPlaceholder "Search movies..."
-			title: @observable "Movies"
+		initEventHandlers: () ->
+			@$(document).on "keyup.movies", (e) =>
+				if _.contains [UP, DOWN, PGUP, PGDN, HOME, END, ENTER], e.keyCode
+					e.preventDefault()
+					e.stopPropagation()
+
+				switch e.keyCode
+					when UP
+						do @scrollUp
+						return false
+					when DOWN
+						do @scrollDown
+						return false
+					when PGUP
+						@scrollUp SCROLLPAGE
+						return false
+					when PGDN
+						@scrollDown SCROLLPAGE
+						return false
+					when HOME
+						@scrollUp -1
+						return false
+					when END
+						@scrollDown -1
+						return false
+					when ENTER
+						do @play
+						return false
+
+			@$movieContainer = @$el.find(".nano").nanoScroller
+				contentClass: "nano-content"
+				alwaysVisible: true
+				preventPageScrolling: true
+
+		properties: () ->
 			movies: @observable []
-			movieLimits: @observable
-				start: 0
-				end: 100
-				total: -1
-			moviesPerPage: 100
-			player: options.player
+			selected: @observable null
+			movieid: @observable ""
+			title: @observable ""
+			year: @observable ""
+			thumbnail: @observable ""
+			plot: @observable ""
+			rating: @observable ""
 
-		computedProperties: (options) ->
-			moviesLeft: @computed () ->
-				return yes if @movieLimits().total < 0
-				return yes unless @movieLimits().end is @movieLimits().total
-				return no
-			resetDisable: @computed () -> @movies().length < 1
+		scrollUp: (interval = 1) ->
+			m = @movies()
+			s = @selected()
+			if interval is -1 # HOME
+				movie = _.first m
+			else if not s? or (i = _.indexOf m, s) is 0
+				movie = _.last m
+				@$movieContainer.nanoScroller
+					scroll: 'bottom'
+			else
+				movie = if not ((i = i - interval) < 0) then m[i] else _.first m
+			@showDetails movie
 
-		subscriptions: (options) ->
-			searchDelayed: @subscribe(options.searchDelayed, (newValue) ->
-				if newValue.length > 3
-					console.log "Search movies: #{newValue}"
-			)
+		scrollDown: (interval = 1) ->
+			m = @movies()
+			s = @selected()
+			if interval is -1 #END
+				movie = _.last m
+			else if not s? or (i = _.indexOf m, s) is m.length - 1
+				movie = _.first m
+				@$movieContainer.nanoScroller
+					scroll: 'top'
+			else
+				movie = if not ((i = i + interval) > m.length - 1) then m[i] else _.last m
+			@showDetails movie
 
-		initialize: (options) ->
-			self = @
-			@client = new WSClient.get "localhost", 9090
-			@videolibrary = new VideoLibrary @client
-			@player = new Player @client
+		selectMovie: () ->
+			self.showDetails @
+
+		showDetails: (movie) ->
+			self.selected()?.selected false
+			movie.selected true
+			@ensureScrollPosition()
+			self.fetchMovieDetails movie.movieid
+			self.selected movie
+
+		ensureScrollPosition: () ->
+			$list = @$el.find(".movie-list")
+			$active = @$el.find(".movie-list .active")
+			if $list.scrollTop() + $active.position().top + $active.height() > $list.scrollTop() + $list.height()
+				@$movieContainer.nanoScroller
+					scrollTop: $active.position().top + $list.scrollTop() - $list.height() + ($active.height() * 1.5)
+			# weird bug, aparently this check is necessary, when going from position 1 to 0 :S
+			else if $list.scrollTop() + $active.position().top is 0
+				@$movieContainer.nanoScroller
+					scroll: 'top'
+			else if $list.scrollTop() + $active.position().top < $list.scrollTop()
+				@$movieContainer.nanoScroller
+					scrollTop: $active.position().top + $list.scrollTop()
+
+
+		fetchMovieDetails: (movieid) ->
+			@videoLibrary.GetMovieDetails
+				params:
+					movieid: movieid
+					properties: [
+						"title"
+						"year"
+						"plot"
+						"rating"
+						"country"
+						"director"
+						"thumbnail"
+					]
+				callback: (data) ->
+					return if @disposed()
+					@movieid data.moviedetails.movieid
+					@title data.moviedetails.title
+					@year data.moviedetails.year
+					@thumbnail Util.parseImageResource data.moviedetails.thumbnail, config, "w185"
+					@plot data.moviedetails.plot
+					@rating data.moviedetails.rating.toFixed 2
+				context: @
 
 		dispose: () ->
+			@$(document).off "movies"
 			super
-			@videolibrary.dispose()
-			@player.dispose()

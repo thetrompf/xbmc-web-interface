@@ -1,37 +1,22 @@
-This is movies template
-
-<div class="row-fl">
-	<button class="btn btn-medium" data-bind="click: resetMovies, disable: resetDisable">Reset movies list</button>
-</div>
-<div class="row-fluid">
-
-	<table class="table table-bordered table-striped">
-		<colgroup>
-			<col class="span1" />
-			<col />
-			<col />
-			<col />
-			<col class="span1" />
-		</colgroup>
-		<thead>
-			<tr>
-				<th>#</th>
-				<th>Title</th>
-				<th>Sort title</th>
-				<th>Original title</th>
-				<th>Year</th>
-			</tr>
-		</thead>
-		<tbody data-bind="foreach: movies">
-			<tr data-bind="click: $root.chooseMovie">
-				<td data-bind="text: movieid"></td>
-				<td data-bind="text: title"></td>
-				<td data-bind="text: sorttitle"></td>
-				<td data-bind="text: originaltitle"></td>
-				<td data-bind="text: year"></td>
-			</tr>
-		</tbody>
-	</table>
-	
-	<button class="btn btn-medium" data-bind="click: moreMovies, disable: moviesLeft() != true">More movies</button>
+<div id="movies-glass-overlay">
+	<div class="row-fluid">
+		<div class="span2 movie-poster">
+			<img data-bind="attr: { src: thumbnail }" />
+		</div>
+		<div class="span4 movie-description">
+			<h2>
+				<!-- ko text: title --><!-- /ko -->
+				<small data-bind="text: year"></small>
+			</h2>
+			<span data-bind="text: plot"></span>
+		</div>
+		<div class="span6 movie-list-container nano">
+			<ol class="movie-list nano-content" data-bind="foreach: movies">
+				<li class="movie-list-item" data-bind="css: { active: selected }, click: $root.selectMovie">
+					<span class="imdb-rating pull-right" data-bind="text: rating"></span>
+					<a class="movie-title" data-bind="text: title, attr: { href: '/movies/'+movieid, title: title }"></a>
+				</li>
+			</ol>
+		</div>
+	</div>
 </div>
