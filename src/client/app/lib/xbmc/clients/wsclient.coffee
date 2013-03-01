@@ -41,7 +41,7 @@ define [
 		# @var string The request identifier prefix.
 		###
 		_prexix = "xbmc-web-interface-"
-		
+
 		###
 		# @var integer The request identifier sequencer.
 		###
@@ -51,7 +51,7 @@ define [
 		# @var WebSocket | null The websocket.
 		###
 		_ws = null
-		
+
 		###
 		# @var ko.observable | null
 		###
@@ -62,7 +62,7 @@ define [
 		# @return string
 		###
 		_getId = () -> "#{_prexix}#{_id++}"
-		
+
 		###
 		# Run queue of requests.
 		# @return void
@@ -102,7 +102,7 @@ define [
 		# @return ClientBase
 		###
 		constructor: (host, port, protocol) ->
-			return @ if _ws?
+			return if _ws?
 			_host = host
 			_port = port
 			_connected = ko.observable no
@@ -112,7 +112,6 @@ define [
 			_whenConnected = ko.computed () ->
 				if _connected() is yes
 					_runQueue()
-			return @
 
 		###
 		# Connect if not connected.
@@ -133,7 +132,7 @@ define [
 							clearTimeout rc
 						else
 							@connect()
-							console?.info "Connection closed trying to reconnect in 5 seconds"
+							console?.info "Connection closed trying to reconnect in 5 seconds, ws://#{_host}:#{_port}/jsonrpc"
 					, 5000
 			return @
 
@@ -196,27 +195,27 @@ define [
 
 			msg = JSON.stringify msg
 			defer = $.Deferred()
-			
+
 			# treating callback as a success callback
 			# if only a function is provided as callback
 			if _.isFunction callback
 				_callback = callback
 				callback = {}
 				callback.success = _callback
-			
+
 			throw new Error "A success callback has to be provided" unless callback.success?
 
 			# setting up defered callbacks
 			defer.fail callback.error if callback.error?
 			defer.done callback.success
-			
+
 			# inserting queue item.
 			_queue[id] =
 				defer: defer
 				msg: msg
 				state: CREATED
 				context: context
-			
+
 			# go ahead and send the message, if we already are connected.
 			if @isConnected()
 				_queue[id].state = SENT
@@ -236,7 +235,7 @@ define [
 			_events[event] = [] unless _events[event]?
 			_events[event].push callback: callback, context: context
 			return @
-		
+
 		###
 		# Unbind a callback from an event.
 		# @param string event
@@ -257,7 +256,7 @@ define [
 
 		###
 		# Unbind all notifications.
-		# If no event specified, then unbind all callbacks. 
+		# If no event specified, then unbind all callbacks.
 		# @param [ string event ]
 		# @return ClientBase
 		###
@@ -270,7 +269,7 @@ define [
 	# Proxy object, used for singleton creation of the _WSClient.
 	###
 	class WSClient
-		
+
 		###
 		# @var _WSClient | null Holds the instance of the exiting connection.
 		###
