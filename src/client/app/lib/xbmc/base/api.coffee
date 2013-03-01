@@ -6,13 +6,13 @@ define [
 	class APIBase
 
 		_API: null
-		
+
 		client: null
 
 		eventBindings: null
 		events: []
 
-		_getEvent: (event) -> 
+		_getEvent: (event) ->
 			e = event.split "."
 			throw new Error "Invalid event namespace, you cannot nest namespaces: #{event}" if e.length > 2
 			res = {}
@@ -23,20 +23,19 @@ define [
 				res.namespace = e[1]
 				res.event = e[0]
 			return res
-		
+
 		constructor: (@client) ->
 			unless @client instanceof ClientBase
 				throw new Error "The client must be an instanceof ClientBase"
 			@_API = @constructor.name
-			
+
 			# setting up event bindings objects.
 			@eventBindings = []
-			return @
 
 		bind: (event, callback, context) ->
 			e = @_getEvent event
 			throw new Error "No such event: #{e.event}, events available: #{@events}" unless _.contains @events, e.event
-			cbObj = 
+			cbObj =
 				callback: callback
 				namespace: e.namespace
 				event: e.event
@@ -56,7 +55,7 @@ define [
 			else
 				eObj = @_getEvent event
 				e = _.contains @events, eObj.event
-			
+
 			throw new Error "No such event: #{event.event}" if not e and not eObj.namespace?
 			if callback?
 				eObj.callback = callback
@@ -69,7 +68,7 @@ define [
 			for eventObj in unbind
 				@client.unbind "#{@_API}.#{eventObj.event}", eventObj.callback
 			return @
-		
+
 		unbindAll: () ->
 			for eventObj in @eventBindings
 				if (idx = @eventBindings.indexOf eventObj) < 0
