@@ -51,11 +51,10 @@ define [
 				context: @
 
 		initEventHandlers: () ->
-			@$(document).on "keyup.movies", (e) =>
-				if _.contains [UP, DOWN, PGUP, PGDN, HOME, END, ENTER], e.keyCode
+			@$(document).on "keydown.movies", (e) =>
+				if _.contains [UP, DOWN, PGUP, PGDN], e.keyCode
 					e.preventDefault()
 					e.stopPropagation()
-
 				switch e.keyCode
 					when UP
 						do @scrollUp
@@ -69,6 +68,12 @@ define [
 					when PGDN
 						@scrollDown SCROLLPAGE
 						return false
+
+			@$(document).on "keyup.movies", (e) =>
+				if _.contains [HOME, END, ENTER, ESC], e.keyCode
+					e.preventDefault()
+					e.stopPropagation()
+				switch e.keyCode
 					when HOME
 						@scrollUp -1
 						return false
