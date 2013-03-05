@@ -6,6 +6,7 @@
 @glassLight: rgba(0,0,0,.2);
 @glassLighter: rgba(0,0,0,.1);
 @glassWhite: rgba(255,255,255,.8);
+@glowBlue: rgb(82,168,236);
 
 body {
 	background-image: url("../img/background.jpg");
@@ -19,6 +20,10 @@ html, body {
 	height: 100%;
 }
 
+.underline {
+	display: inline-block;
+	border-bottom: 1px solid @grayLight;
+}
 
 #global-system {
 	position: absolute;
@@ -139,6 +144,15 @@ html, body {
 		> li {
 			margin-bottom: 50px;
 			line-height: 56px;
+			padding: 14px 10px 0 10px;
+
+			&.active {
+				border: none;
+				background: fade(@glowBlue, 20%);
+				border-color: fade(@glowBlue, 80%);
+				.box-shadow(e(%("inset 0 10px 10px %d, 0 0 10px %d", rgba(0,0,0,.075), fade(@glowBlue, 60%))));
+			}
+
 			> a {
 				font-size: 56px;
 				font-family: Helvetica, Verdana, Arial;
@@ -146,9 +160,13 @@ html, body {
 				text-transform: uppercase;
 				text-decoration: none;
 				color: @grayLight;
-				&:hover, &.active {
-					text-decoration: none;
-					color: @grayLighter;
+			}
+
+			&:hover > a, &.active > a {
+				text-decoration: none;
+				color: @grayLighter;
+				> .underline {
+					border-bottom-color: @grayLighter;
 				}
 			}
 		}

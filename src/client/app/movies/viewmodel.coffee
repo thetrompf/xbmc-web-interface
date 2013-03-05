@@ -1,12 +1,10 @@
 define [
-	"underscore"
 	"base/viewmodel"
 	"text!app/movies/templates/movies.html"
 	"xbmc/api/videolibrary"
 	"xbmc/api/util"
-	"app/config"
 	"vendor/nanoscroller/jquery.nanoscroller"
-], (_, ViewModel, template, VideoLibrary, Util, config) ->
+], (ViewModel, template, VideoLibrary, Util) ->
 	class MoviesViewModel extends ViewModel
 
 		ENTER = 13
@@ -28,6 +26,16 @@ define [
 		self          = null
 		videoLibrary  = null
 
+		properties: () ->
+			movies    : @observable []
+			selected  : @observable null
+			movieid   : @observable ""
+			title     : @observable ""
+			year      : @observable ""
+			thumbnail : @observable ""
+			plot      : @observable ""
+			rating    : @observable ""
+
 		afterInitialize: (opts) ->
 			super
 			self = @
@@ -40,8 +48,8 @@ define [
 					]
 				callback:
 					success: (msg) ->
-						return if @disposed()
-						_.map msg.movies, (e) =>
+						return if do @disposed
+						@_.map msg.movies, (e) =>
 							e.selected = @observable false
 							e.rating = e.rating.toFixed 2
 							return e
@@ -52,9 +60,9 @@ define [
 
 		initEventHandlers: () ->
 			@$(document).on "keydown.movies", (e) =>
-				if _.contains [UP, DOWN, PGUP, PGDN], e.keyCode
-					e.preventDefault()
-					e.stopPropagation()
+				if @_.contains [UP, DOWN, PGUP, PGDN], e.keyCode
+					do e.preventDefault
+					do e.stopPropagation
 				switch e.keyCode
 					when UP
 						do @scrollUp
@@ -70,9 +78,9 @@ define [
 						return false
 
 			@$(document).on "keyup.movies", (e) =>
-				if _.contains [HOME, END, ENTER, ESC], e.keyCode
-					e.preventDefault()
-					e.stopPropagation()
+				if @_.contains [HOME, END, ENTER, ESC], e.keyCode
+					do e.preventDefault
+					do e.stopPropagation
 				switch e.keyCode
 					when HOME
 						@scrollUp -1
@@ -89,40 +97,30 @@ define [
 				alwaysVisible: true
 				preventPageScrolling: true
 
-		properties: () ->
-			movies: @observable []
-			selected: @observable null
-			movieid: @observable ""
-			title: @observable ""
-			year: @observable ""
-			thumbnail: @observable ""
-			plot: @observable ""
-			rating: @observable ""
-
 		scrollUp: (interval = 1) ->
-			m = @movies()
-			s = @selected()
+			m = do @movies
+			s = do @selected
 			if interval is -1 # HOME
-				movie = _.first m
-			else if not s? or (i = _.indexOf m, s) is 0
-				movie = _.last m
+				movie = @_.first m
+			else if not s? or (i = @_.indexOf m, s) is 0
+				movie = @_.last m
 				@$movieContainer.nanoScroller
 					scroll: 'bottom'
 			else
-				movie = if not ((i = i - interval) < 0) then m[i] else _.first m
+				movie = if not ((i = i - interval) < 0) then m[i] else @_.first m
 			@showDetails movie
 
 		scrollDown: (interval = 1) ->
-			m = @movies()
-			s = @selected()
+			m = do @movies
+			s = do @selected
 			if interval is -1 #END
-				movie = _.last m
-			else if not s? or (i = _.indexOf m, s) is m.length - 1
-				movie = _.first m
+				movie = @_.last m
+			else if not s? or (i = @_.indexOf m, s) is m.length - 1
+				movie = @_.first m
 				@$movieContainer.nanoScroller
 					scroll: 'top'
 			else
-				movie = if not ((i = i + interval) > m.length - 1) then m[i] else _.last m
+				movie = if not ((i = i + interval) > m.length - 1) then m[i] else @_.last m
 			@showDetails movie
 
 		selectMovie: () ->
@@ -131,7 +129,7 @@ define [
 		showDetails: (movie) ->
 			self.selected()?.selected false
 			movie.selected true
-			@ensureScrollPosition()
+			do @ensureScrollPosition
 			self.fetchMovieDetails movie.movieid
 			self.selected movie
 
@@ -164,13 +162,13 @@ define [
 						"thumbnail"
 					]
 				callback: (data) ->
-					return if @disposed()
-					@movieid data.moviedetails.movieid
-					@title data.moviedetails.title
-					@year data.moviedetails.year
-					@thumbnail Util.parseImageResource data.moviedetails.thumbnail, config, "w185"
-					@plot data.moviedetails.plot
-					@rating data.moviedetails.rating.toFixed 2
+					return if do @disposed
+					@movieid   data.moviedetails.movieid
+					@title     data.moviedetails.title
+					@year      data.moviedetails.year
+					@thumbnail Util.parseImageResource data.moviedetails.thumbnail, @options.config, "w185"
+					@plot      data.moviedetails.plot
+					@rating    data.moviedetails.rating.toFixed 2
 				context: @
 
 		dispose: () ->

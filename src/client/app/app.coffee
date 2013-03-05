@@ -40,4 +40,6 @@ define [
 				global: @global
 				config: config
 			@global = new Global options
+			options.global = @global
 			@initRouter routes, options
+			options.router = @router

@@ -1,11 +1,8 @@
 <div id="home-glass-overlay">
 	<div class="logo"></div>
 	<div class="menu-container">
-		<ul class="menu">
-			<li><a href="/movies">Movies</a></li>
-			<li><a href="/tvshows">TV Shows</a></li>
-			<li><a href="/music">Music</a></li>
-			<li><a href="/settings">Settings</a></li>
+		<ul class="menu" data-bind="foreach: menuEntries">
+			<li class="menu-entry" data-bind="css: { active: selected }"><a data-bind="html: html, attr: { href: href }"></a></li>
 		</ul>
 	</div>
 </div>
