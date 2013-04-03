@@ -2,7 +2,8 @@ define [
 	"jquery"
 	"underscore"
 	"knockout"
-], ($, _, ko, Router) ->
+	"knockout-postbox"
+], ($, _, ko) ->
 
 	uid = 0
 
@@ -10,7 +11,7 @@ define [
 	# Used as a binding context.
 	# Delivers base functionality for a ViewModel.
 	# Can be used with and without a template.
-	# @uses jQuery | _ | ko | Router
+	# @uses jQuery | _ | ko
 	###
 	class ViewModel
 

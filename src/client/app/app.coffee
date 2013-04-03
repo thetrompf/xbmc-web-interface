@@ -5,9 +5,9 @@ define [
 	"app/routes"
 	"app/config"
 	"xbmc/clients/wsclient"
-	"xbmc/api/gui"
+	"app/player/viewmodel"
 	"date/format"
-], (_, ViewModelBase, Router, routes, config, WSClient, GUI) ->
+], (_, ViewModelBase, Router, routes, config, WSClient, PlayerViewModel) ->
 
 	class Global extends ViewModelBase
 		bindingContext: "#global-system"
@@ -39,7 +39,11 @@ define [
 				client: @client
 				global: @global
 				config: config
+
 			@global = new Global options
 			options.global = @global
+
+			@player = new PlayerViewModel options
+
 			@initRouter routes, options
 			options.router = @router

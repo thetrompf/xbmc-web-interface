@@ -9,6 +9,7 @@ requirejs.config
 		text: "vendor/require/require.text-2.0.3"
 		xbmc: "app/lib/xbmc"
 		date: "app/lib/date"
+		"knockout-postbox": "vendor/knockout-postbox/knockout-postbox-0.3.0"
 	shim:
 		underscore:
 			exports: "_"
@@ -20,5 +21,5 @@ requirejs.config
 			deps: ["jquery"]
 			exports: "Sammy"
 
-require ["app/app", "jquery", "knockout", "sammy", "underscore", "text"], (Application, $, ko, Sammy, _) ->
+require ["app/app", "jquery", "knockout", "sammy", "underscore", "text", "knockout-postbox"], (Application, $, ko, Sammy, _) ->
 	new Application()

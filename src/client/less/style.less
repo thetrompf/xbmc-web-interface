@@ -7,8 +7,10 @@
 @glassLighter: rgba(0,0,0,.1);
 @glassWhite: rgba(255,255,255,.8);
 @glowBlue: rgb(82,168,236);
+@scrollPaneColor: rgba(41,84,118,.6);
 
 body {
+	overflow-y: scroll;
 	background-image: url("../img/background.jpg");
 	background-position: 0 0;
 	background-repeat: no-repeat;
@@ -34,7 +36,6 @@ html, body {
 
 	.date {
 		width: 300px;
-		margin-left: 15px;
 	}
 
 	.weather {
@@ -46,14 +47,65 @@ html, body {
 	line-height: normal; // fixes the placeholder "dancing"!
 }
 
+#player-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	color: @grayLighter;
+
+	.skew-box {
+		height: 30px;
+	}
+
+	.toolbar {
+		margin: -5px 0 0 0;
+		list-style: none;
+		list-style-type: none;
+		li {
+
+			display: inline-block;
+			border-radius: 12px;
+			position: relative;
+			width: 26px;
+			height: 26px;
+			margin-top: 2px;
+
+			&:hover {
+				cursor: pointer;
+				box-shadow: 0px 0px 20px #0085ff;
+			}
+
+			i {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				margin: -7px 0 0 -7px;
+			}
+		}
+	}
+
+	.controls {
+		width: 190px;
+	}
+
+	.settings {
+		width: 70px;
+	}
+
+	.global-controls {
+		width: 36px;
+	}
+}
 
 .skew-box {
 	padding: 5px;
 	z-index: 1;
 	position: relative;
-	#gradient > .horizontal(@glassDark, @glassLighter);
+	// this is necessary becourse the #gradient > .horizontal mixin
+	// overrides the background-color which is defined in the 
+	// pull-right / pull-left defines
+	background-color: @glassLighter !important;
 	text-align: left;
-	margin-left: 15px;
 
 	&:before,
 	&:after {
@@ -77,19 +129,31 @@ html, body {
 
 .pull-right {
 	.skew-box {
+		margin-left: 15px;
+		margin-right: 0px;
+		#gradient > .horizontal(@glassDark, @glassLighter);
 		&:before {
 			border-top: 30px solid @glassDark;
 		}
-		&:not(:last-of-type):after {
-			border-bottom: 30px solid @glassLight;
+		&:not(:last-of-type) {
+			padding-right: 5px;
+			&:after {
+				border-bottom: 30px solid @glassLight;
+			}
 		}
 	}
 }
 
 .pull-left {
 	.skew-box {
-		&:not(:first-of-type):before {
-			border-bottom: 30px solid @glassDark;
+		margin-right: 15px;
+		margin-left: 0px;
+		#gradient > .horizontal(@glassLighter, @glassDark);
+		&:not(:first-of-type) {
+			padding-left: 5px;
+			&:before {
+				border-bottom: 30px solid @glassLight;
+			}
 		}
 		&:after {
 			border-top: 30px solid @glassDark;
@@ -237,6 +301,7 @@ html, body {
 					border: none;
 					background: rgba(82,168,236,.2);
 					border-color: rgba(82,168,236,.8);
+					padding-bottom: 9px; // fix the text dancing, after removing the border.
 					.box-shadow(~"inset 0 10px 10px rgba(0,0,0,.075), 0 0 10px rgba(82,168,236,.6)");
 				}
 
@@ -256,14 +321,5 @@ html, body {
 				}
 			}
 		}
-	}
-}
-
-#xbmc-player {
-	li > * {
-		margin-right: 10px;
-	}
-	img {
-		height: 39px;
 	}
 }

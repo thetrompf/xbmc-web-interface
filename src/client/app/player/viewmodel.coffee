@@ -2,9 +2,9 @@ define [
 	"base/viewmodel"
 	"xbmc/api/player"
 	"xbmc/api/util"
-	"text!app/player/player.html"
-	"app/config"
-], (ViewModelBase, Player, Util, template, config) ->
+	"xbmc/api/application"
+	"text!app/player/templates/player.html"
+], (ViewModelBase, Player, Util, Application, template) ->
 
 	class PlayerViewModel extends ViewModelBase
 
@@ -14,33 +14,52 @@ define [
 		template = null
 
 		properties: () ->
-			playerid: @observable -1
+			currentlyPlaying: @observable null
+			playerOpen: @observable(null).subscribeTo "Player.Open"
 			isPlaying: @observable no
-			currentTitle: @observable ""
-			thumbnail: @observable ""
+			playerId: @observable null
 
-		computedProperties: () ->
-			playButtonContent: @computed () ->
-				if @isPlaying()
-					return '<icon class="icon-pause"></icon>'
-				else
-					return '<icon class="icon-play"></icon>'
+
+		subscriptions: () ->
+			self = @
+			@playerOpen.subscribe (newValue) ->
+				self.play newValue
 
 		togglePlay: () ->
 			@player.PlayPause
 				callback: (data) -> return
-				playerid: @playerid()
+				playerid: @playerId()
 
 		stop: () ->
 			@player.Stop
 				callback: (data) -> return
-				playerid: @playerid()
+				playerid: @playerId()
 
 		forward: () ->
 
+		quit: () ->
+			@application.Quit
+				callback:
+					success: (data) ->
+					error: (msg) ->
+						console.error msg
+
+		play: (playable) ->
+			throw new Error "A playable has to have a type defined. e.g. movie or episode" unless playable.type?
+			item = {}
+			typeId = playable['type']+"id"
+			item[typeId] = (id = playable["#{playable['type']}id"])
+			throw new Error "There is now id defined corresponding to the type: #{playable['type']}" unless id?
+			@player.Open
+				item: item
+				callback:
+					success: (msg) ->
+					error: (err) -> console?.error err
+				context: @
 
 		initialize: (options) ->
 			@player = new Player options.client
+			@application = new Application options.client
 
 		afterInitialize: (options) ->
 			@initPlayer()
@@ -48,7 +67,7 @@ define [
 
 		initPlayerState: () ->
 			@player.GetProperties
-				playerid: @playerid()
+				playerid: @playerId()
 				properties: [ "speed" ]
 				callback: (data) ->
 					if data.speed > 0
@@ -61,15 +80,14 @@ define [
 				callback:
 					success: (data) ->
 						if (p = data[0])?
-							@playerid p.playerid
-							@initPlayerState p.playerid
+							@playerId p.playerid
 					error: (data) ->
 						console.error "An error occured when retreiving active players"
 				context: @
 
 		getItemInfo: () ->
 			@player.GetItem
-				playerid: @playerid()
+				playerid: @playerId()
 				properties: [
 					"title"
 					"season"
@@ -83,11 +101,12 @@ define [
 				]
 				callback:
 					success: (data) ->
-						if data.item.type is "episode"
-							@currentTitle @formatTVShowTitle data.item
-						else
-							@currentTitle data.item.title
-						@thumbnail Util.parseImageResource data.item.thumbnail, config.resources, "w92"
+						@currentlyPlaying data.item
+						# if data.item.type is "episode"
+						# 	@currentTitle @formatTVShowTitle data.item
+						# else
+						# 	@currentTitle data.item.title
+						# @thumbnail Util.parseImageResource data.item.thumbnail, @options.config.resources, "w92"
 					error: (data) -> debugger
 				context: @
 
@@ -105,14 +124,14 @@ define [
 
 		initEventListiners: () ->
 			@player.bind "OnPlay", (data) ->
-				@playerid data.player.playerid
+				@playerId data.player.playerid
 				@isPlaying yes
 				@getItemInfo()
 			, @
 			@player.bind "OnStop", (data) ->
-				@playerid -1
+				@playerId -1
 				@isPlaying no
-				@currentTitle ""
+				@currentlyPlaying null
 			, @
 			@player.bind "OnPause", (data) ->
 				@isPlaying no

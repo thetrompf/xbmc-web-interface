@@ -1,0 +1,23 @@
+<div class="player-controls row-fluid">
+	<div class="settings span skew-box">
+		<ul class="toolbar">
+			<li><i class="icon-white icon-music"></i></li>
+			<li><i class="icon-white icon-film"></i></li>
+		</ul>
+	</div>
+	<div class="controls span skew-box">
+		<ul class="toolbar">
+			<li><i class="icon-white icon-fast-backward"></i></li>
+			<li><i class="icon-white icon-backward"></i></li>
+			<li data-bind="click: stop"><i class="icon-white icon-stop"></i></li>
+			<li data-bind="click: togglePlay"><i class="icon-white" data-bind="css: { 'icon-play': !isPlaying(), 'icon-pause': isPlaying() }"></i></li>
+			<li><i class="icon-white icon-forward"></i></li>
+			<li><i class="icon-white icon-fast-forward"></i></li>
+		</ul>
+	</div>
+	<div class="global-controls span skew-box">
+		<ul class="toolbar">
+			<li data-bind="click: quit"><i class="icon-white icon-remove"></i></li>
+		</ul>
+	</div>
+</div>

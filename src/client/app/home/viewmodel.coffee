@@ -1,7 +1,6 @@
 define [
 	"base/viewmodel"
 	"text!app/home/templates/home.html"
-	"text!app/home/templates/inner.html"
 ], (ViewModelBase, template) ->
 	'use strict'
 	class HomeViewModel extends ViewModelBase
@@ -13,10 +12,12 @@ define [
 		UP    = 38
 		DOWN  = 40
 
-		bindingContext: "#main-container"
-		template      : template
-		template      = null
-		self          = null
+		bindingContext   : "#main-container"
+		template         : template
+		template         = null
+		self             : null
+		menuEntryTimeout : null
+		menuEntrySelectionThrottle = 100
 
 		properties: () ->
 			menuEntries: @observable [
@@ -40,6 +41,7 @@ define [
 
 		initEventHandlers: () ->
 			@$(document).on "keydown.home", (e) =>
+				clearTimeout @menuEntryTimeout
 				if @_.contains [UP, DOWN], e.keyCode
 					do e.preventDefault
 					do e.stopPropagation
@@ -66,17 +68,13 @@ define [
 						do @select
 						return false
 					when 77 # M
-						@highlightMenuEntry @menuEntries()[0]
-						return do @select
+						return @selectMenuEntry @menuEntries()[0]
 					when 84 # T
-						@highlightMenuEntry @menuEntries()[1]
-						return do @select
+						return @selectMenuEntry @menuEntries()[1]
 					when 85 # U
-						@highlightMenuEntry @menuEntries()[2]
-						return do @select
+						return @selectMenuEntry @menuEntries()[2]
 					when 83 # S
-						@highlightMenuEntry @menuEntries()[3]
-						return do @select
+						return @selectMenuEntry @menuEntries()[3]
 
 		bindingsApplied: () ->
 			@initEventHandlers()
@@ -106,6 +104,12 @@ define [
 			else
 				menuEntry = if not ((i = i + interval) > m.length - 1) then m[i] else @_.last m
 			@highlightMenuEntry menuEntry
+
+		selectMenuEntry: (menuEntry) ->
+			@highlightMenuEntry menuEntry
+			@menuEntryTimeout = setTimeout () =>
+				do @select
+			, menuEntrySelectionThrottle
 
 		highlightMenuEntry: (menuEntry) ->
 			@selectedEntry()?.selected false

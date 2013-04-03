@@ -2,7 +2,9 @@
 	<div class="logo"></div>
 	<div class="menu-container">
 		<ul class="menu" data-bind="foreach: menuEntries">
-			<li class="menu-entry" data-bind="css: { active: selected }"><a data-bind="html: html, attr: { href: href }"></a></li>
+			<li class="menu-entry" data-bind="css: { active: selected }">
+				<a data-bind="html: html, attr: { href: href }"></a>
+			</li>
 		</ul>
 	</div>
 </div>

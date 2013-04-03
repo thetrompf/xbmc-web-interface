@@ -35,6 +35,7 @@ define [
 			thumbnail : @observable ""
 			plot      : @observable ""
 			rating    : @observable ""
+			currentlyPlaying: @observable(null).publishOn "Player.Open"
 
 		afterInitialize: (opts) ->
 			super
@@ -46,15 +47,21 @@ define [
 						"title"
 						"rating"
 					]
+					sort:
+						method: "sorttitle"
 				callback:
 					success: (msg) ->
 						return if do @disposed
 						@_.map msg.movies, (e) =>
 							e.selected = @observable false
 							e.rating = e.rating.toFixed 2
+							e.type = "movie"
 							return e
 						@movies msg.movies
-						@initEventHandlers()
+						do @initEventHandlers
+						# this has to be done have initEventHandlers,
+						# because the nanoScroller has to be initialized first.
+						@showDetails msg.movies[0] if msg.movies.length > 0
 					error: (err) -> debugger
 				context: @
 
@@ -97,6 +104,10 @@ define [
 				alwaysVisible: true
 				preventPageScrolling: true
 
+		play: () ->
+			return unless (s = do @selected)?
+			@currentlyPlaying s
+
 		scrollUp: (interval = 1) ->
 			m = do @movies
 			s = do @selected
@@ -123,8 +134,9 @@ define [
 				movie = if not ((i = i + interval) > m.length - 1) then m[i] else @_.last m
 			@showDetails movie
 
-		selectMovie: () ->
-			self.showDetails @
+		selectMovie: (movie) ->
+			return self.showDetails @ unless movie?
+			self.showDetails movie
 
 		showDetails: (movie) ->
 			self.selected()?.selected false
@@ -146,7 +158,6 @@ define [
 			else if $list.scrollTop() + $active.position().top < $list.scrollTop()
 				@$movieContainer.nanoScroller
 					scrollTop: $active.position().top + $list.scrollTop()
-
 
 		fetchMovieDetails: (movieid) ->
 			@videoLibrary.GetMovieDetails

@@ -40,6 +40,9 @@ define [
 		###
 		Quit: (options) ->
 			method = "#{@_API}.Quit"
+			@client.send
+				method: method
+			, options.callback, options.context
 			return @
 		
 		###

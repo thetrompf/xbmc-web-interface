@@ -1,13 +1,13 @@
 define [], () ->
 	jsonrpc:
 		protocol: "ws://"
-		host: "192.168.0.2"
+		host: "192.168.0.2"#"localhost"
 		port: 9090
 	resources:
 		username: "xbmc"
 		password: "xbmc"
 		protocol: "http://"
-		host: "192.168.0.2"
+		host: "192.168.0.2"#"localhost"
 		port: 8080
 		useCached: false
 	i18n:
